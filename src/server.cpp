@@ -15,6 +15,7 @@
 #include <iostream>
 
 #include "connection.h"
+#include "debug.h"
 
 /*!
  * \brief Server port to receive new connections.
@@ -46,7 +47,11 @@ void runProxyServer()
     struct sockaddr_in serv_addr;
 
     // Register a signal handler to SIGINT
-    signal(SIGINT, SIGINTHandler);
+    struct sigaction sa;
+    sa.sa_handler = SIGINTHandler;
+    sa.sa_flags = 0;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGINT, &sa, NULL);
 
     server_socket = initializeServerSocket(serv_addr);
 
@@ -55,12 +60,14 @@ void runProxyServer()
         // Await for new connections
         Connection connection(server_socket);
 
-        // TODO: connection.getRequest()
-        // if (connection.status != OK)
-        // {
+        connection.receiveRequest();
+        if (connection.status != OK)
+        {
             // TODO: connection.sendError()
-            // continue;
-        // }
+            continue;
+        }     
+
+        // std::cout << connection.getRequest() << std::endl;
 
         // TODO: filter.request(&connection)
         // if (connection.status != OK)

@@ -3,13 +3,14 @@
  * \author Gustavo Henrique Fernandes Carvalho
  */
 
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
+#include <errno.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "connection.h"
+#include "HTTP.h"
+#include "debug.h"
 
 /*!
  * \brief Initialize a connection object with a new client request.
@@ -20,11 +21,29 @@
 Connection::Connection(int server_socket)
     : status(OK)
 {
+    PRINT_DEBUG("%s: Waiting for new connections\n", __PRETTY_FUNCTION__);
+
     client_socket = accept(server_socket, (struct sockaddr *) &client_addr, &client_addr_length);
     if (client_socket == -1)
     {
+        int errsv = errno;
         perror("accept");
         // TODO: Call logger
+        if (errsv != EINTR)
         exit(EXIT_FAILURE);
     }
+}
+
+
+Connection::~Connection()
+{
+    close(client_socket);
+}
+
+
+void Connection::receiveRequest()
+{
+    PRINT_DEBUG("%s: Receiving new request\n", __PRETTY_FUNCTION__);
+
+    request = receiveHTTPMessage(client_socket, status);
 }
