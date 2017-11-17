@@ -14,7 +14,7 @@ RM = rm -rf
 
 all: $(EXE)
 
-debug: CPPFLAGS += -g
+debug: CPPFLAGS += -g -DDEBUG
 debug: $(EXE)
 
 $(EXE): $(OBJECTS)
