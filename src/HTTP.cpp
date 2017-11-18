@@ -73,19 +73,14 @@ bool receiveWholeHTTPMessage(const std::string& message)
 
     // Get the Content-Length
     std::size_t position = message.find("Content-Length:");
-    if (position != std::string::npos)
-    {
-        expected_content_length = strtol(&message.c_str()[ position + sizeof("Content-Length:") ], NULL, 10);
-        message_content_length = message.size() - message.find("\r\n\r\n") - sizeof("\r\n\r\n");
-
-        if(message_content_length < expected_content_length)
-            return false;
-        else
-            return true;
-    }
-    else
+    if (position == std::string::npos)
     {
         // The message doesn't have any content besides the header
         return true;
     }
+
+    expected_content_length = strtol(&message.c_str()[ position + sizeof("Content-Length:") ], NULL, 10);
+    message_content_length = message.size() - message.find("\r\n\r\n") - sizeof("\r\n\r\n");
+
+    return message_content_length >= expected_content_length;
 }

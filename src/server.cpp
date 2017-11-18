@@ -15,6 +15,7 @@
 #include <iostream>
 
 #include "connection.h"
+#include "HTTP-request.h"
 #include "debug.h"
 
 /*!
@@ -65,9 +66,11 @@ void runProxyServer()
         {
             // TODO: connection.sendError()
             continue;
-        }     
+        }
+        HTTPRequest request(connection.getRequest());
 
-        // std::cout << connection.getRequest() << std::endl;
+        //std::cout << connection.getRequest() << std::endl;
+        //std::cout << request.toMessage() << std::endl;
 
         // TODO: filter.request(&connection)
         // if (connection.status != OK)
