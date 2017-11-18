@@ -62,7 +62,7 @@ std::string receiveHTTPMessage(int sockfd, ConnectionStatus& status)
  */
 bool receiveWholeHTTPMessage(const std::string& message)
 {
-    long int expected_content_lenght, message_content_lenght;
+    long int expected_content_length, message_content_length;
 
     // Check if the header isn't complete
     if (message.find("\r\n\r\n") == std::string::npos)
@@ -75,10 +75,10 @@ bool receiveWholeHTTPMessage(const std::string& message)
     std::size_t position = message.find("Content-Length:");
     if (position != std::string::npos)
     {
-        expected_content_lenght = strtol(&message.c_str()[ position + sizeof("Content-Length:") ], NULL, 10);
-        message_content_lenght = message.size() - message.find("\r\n\r\n") - sizeof("\r\n\r\n");
+        expected_content_length = strtol(&message.c_str()[ position + sizeof("Content-Length:") ], NULL, 10);
+        message_content_length = message.size() - message.find("\r\n\r\n") - sizeof("\r\n\r\n");
 
-        if(message_content_lenght < expected_content_lenght)
+        if(message_content_length < expected_content_length)
             return false;
         else
             return true;
