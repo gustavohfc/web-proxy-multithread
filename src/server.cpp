@@ -60,6 +60,10 @@ void runProxyServer()
     {
         // Await for new connections
         Connection connection(server_socket);
+        if (SIGINT_received)
+        {
+            break;
+        }
 
         connection.receiveRequest();
         if (connection.status != OK)
@@ -67,10 +71,6 @@ void runProxyServer()
             // TODO: connection.sendError()
             continue;
         }
-        HTTPRequest request(connection.getRequest());
-
-        //std::cout << connection.getRequest() << std::endl;
-        //std::cout << request.toMessage() << std::endl;
 
         // TODO: filter.request(&connection)
         // if (connection.status != OK)

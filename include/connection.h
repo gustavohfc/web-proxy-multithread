@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <string>
+#include "HTTP-request.h"
 
 enum ConnectionStatus {OK, INVALID_REQUEST, TIMEOUT, FILTER_BLOCKED};
 
@@ -19,7 +20,7 @@ private:
     int client_socket;
     struct sockaddr_in client_addr;
     socklen_t client_addr_length;
-    std::string request;
+    HTTPRequest* client_request;
 
 
 public:
@@ -29,7 +30,7 @@ public:
     ~Connection();
     void receiveRequest();
 
-    const std::string& getRequest() const { return request; };
+    const HTTPRequest* getClientRequest() const { return client_request; };
 };
 
 #endif // CONNECTION_H

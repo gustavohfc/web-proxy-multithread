@@ -19,7 +19,7 @@
  * \param [in] server_socket File descriptor of the server socket.
  */
 Connection::Connection(int server_socket)
-    : status(OK)
+    : client_request(nullptr), status(OK)
 {
     PRINT_DEBUG("%s: Waiting for new connections\n", __PRETTY_FUNCTION__);
 
@@ -37,7 +37,10 @@ Connection::Connection(int server_socket)
 
 Connection::~Connection()
 {
-    close(client_socket);
+    delete client_request;
+
+    if (client_socket != -1)
+        close(client_socket);
 }
 
 
@@ -45,5 +48,5 @@ void Connection::receiveRequest()
 {
     PRINT_DEBUG("%s: Receiving new request\n", __PRETTY_FUNCTION__);
 
-    request = receiveHTTPMessage(client_socket, status);
+    client_request = new HTTPRequest(receiveHTTPMessage(client_socket, status));
 }
