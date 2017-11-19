@@ -17,6 +17,7 @@
 #include "connection.h"
 #include "HTTP-request.h"
 #include "debug.h"
+#include "cache.h"
 
 /*!
  * \brief Server port to receive new connections.
@@ -46,6 +47,7 @@ void runProxyServer()
 {
     int server_socket;
     struct sockaddr_in serv_addr;
+    Cache cache;
 
     // Register a signal handler to SIGINT
     struct sigaction sa;
@@ -72,21 +74,21 @@ void runProxyServer()
             continue;
         }
 
-        // TODO: filter.request(&connection)
+        // TODO: filter.request(connection)
         // if (connection.status != OK)
         // {
             // TODO: connection.sendError()
             // continue;
         // }
 
-        // TODO: cache.getFile(&connection)
-        // if (connection.status != OK)
-        // {
+        cache.getResponseMessage(connection);
+        if (connection.status != OK)
+        {
             // TODO: connection.sendError()
-            // continue;
-        // }
+            continue;
+        }
 
-        // TODO: filter.response(&connection)
+        // TODO: filter.response(connection)
         // if (connection.status != OK)
         // {
             // TODO: connection.sendError()
@@ -94,6 +96,8 @@ void runProxyServer()
         // }
 
         // TODO: connection.sendResponse();
+
+        break;
     }
 
     close(server_socket);

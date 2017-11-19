@@ -83,15 +83,16 @@ HTTPRequest::HTTPRequest(
     this->body = body;
 }
 
-std::string HTTPRequest::toMessage()
+std::string HTTPRequest::toMessage() const
 {
     std::string message;
     message.append(method + " " + url + " " + version + "\r\n");
-    std::map<std::string, std::string>::iterator it = headers.begin();
-    for (; it != headers.end(); ++it)
+
+    for (auto i : headers)
     {
-        message.append(it->first + ": " + it->second + "\r\n");
+        message.append(i.first + ": " + i.second + "\r\n");
     }
+
     message.append("\r\n");
     message.append(body);
     return message;

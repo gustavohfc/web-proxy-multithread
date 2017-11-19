@@ -28,7 +28,7 @@ public:
         const std::string& body
     );
 
-    std::string toMessage();
+    std::string toMessage() const;
 
     const std::string& getMethod() const { return method; };
     const std::string& getUrl() const { return url; };

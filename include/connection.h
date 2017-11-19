@@ -12,7 +12,7 @@
 #include <string>
 #include "HTTP-request.h"
 
-enum ConnectionStatus {OK, INVALID_REQUEST, TIMEOUT, FILTER_BLOCKED};
+enum ConnectionStatus {OK, INVALID_REQUEST, TIMEOUT, FILTER_BLOCKED, CANNOT_SEND_MESSAGE};
 
 class Connection
 {

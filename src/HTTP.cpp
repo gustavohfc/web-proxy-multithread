@@ -3,9 +3,13 @@
  * \author Gustavo Henrique Fernandes Carvalho
  */
 
-#include <sys/socket.h>
+#include <netdb.h>
 #include <sys/types.h>
 #include <netinet/in.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <string.h>
+#include <unistd.h>
 #include "HTTP.h"
 #include "debug.h"
 
@@ -83,4 +87,80 @@ bool receiveWholeHTTPMessage(const std::string& message)
     message_content_length = message.size() - message.find("\r\n\r\n") - sizeof("\r\n\r\n");
 
     return message_content_length >= expected_content_length;
+}
+
+
+void sendHTTPMessage(const std::string& host, std::string message, ConnectionStatus& status)
+{
+    int sockfd;
+    struct addrinfo hints, *servinfo, *p;
+    char s[INET6_ADDRSTRLEN];
+    int rv;
+    uint bytes_sent = 0;
+
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC; // Use IPv4 or IPv6
+    hints.ai_socktype = SOCK_STREAM; // Use TCP
+
+    char* host_name = strdup(host.c_str());
+    // Remove the port number from the host name
+    char* colon_char = strchr(host_name, ':');
+    if (colon_char != NULL)
+    {
+        *colon_char = '\0';
+    }
+
+    if ((rv = getaddrinfo(host_name, "http", &hints, &servinfo)) != 0)
+    {
+        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+        status = CANNOT_SEND_MESSAGE;
+        return;
+    }
+
+    // Loop through all the results and try to connect
+    for(p = servinfo; p != NULL; p = p->ai_next) {
+        if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
+            perror("socket");
+            continue;
+        }
+
+        if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+            close(sockfd);
+            perror("connect");
+            continue;
+        }
+
+        break;
+    }
+
+    if (p == NULL) {
+        fprintf(stderr, "client: failed to connect\n");
+        status = CANNOT_SEND_MESSAGE;
+        return;
+    }
+
+    if (((struct sockaddr *) p->ai_addr)->sa_family == AF_INET)
+    {
+        inet_ntop(p->ai_family, &(((struct sockaddr_in *)((struct sockaddr *) p->ai_addr))->sin_addr), s, sizeof s);
+    }
+    else
+    {
+        inet_ntop(p->ai_family, &(((struct sockaddr_in6 *)((struct sockaddr *) p->ai_addr))->sin6_addr), s, sizeof s);
+    }
+
+    freeaddrinfo(servinfo);
+
+    while (bytes_sent < message.size())
+    {
+        rv = send(sockfd, &message.c_str()[bytes_sent], message.size() - bytes_sent, 0);
+        if (rv == -1)
+        {
+            perror("send");
+            status = CANNOT_SEND_MESSAGE;
+        }
+
+        bytes_sent += rv;
+    }
+
+    close(sockfd);
 }
