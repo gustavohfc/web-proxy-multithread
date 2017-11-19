@@ -11,20 +11,22 @@
 #include <netinet/in.h>
 #include <string>
 #include "HTTP-request.h"
+#include "HTTP-response.h"
 
-enum ConnectionStatus {OK, INVALID_REQUEST, TIMEOUT, FILTER_BLOCKED, CANNOT_SEND_MESSAGE};
+enum ConnectionStatus {OK, INVALID_REQUEST, TIMEOUT, FILTER_BLOCKED, CANNOT_SEND_MESSAGE_TO_HOST, CANNOT_CONNECT_TO_HOST};
 
 class Connection
 {
 private:
-    int client_socket;
     struct sockaddr_in client_addr;
     socklen_t client_addr_length;
     HTTPRequest* client_request;
 
 
 public:
+    int client_socket;
     ConnectionStatus status;
+    HTTPResponse* response;
 
     Connection(int server_socket);
     ~Connection();

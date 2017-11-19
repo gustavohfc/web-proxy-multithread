@@ -3,9 +3,10 @@
  * \author Gustavo Henrique Fernandes Carvalho
  */
 
-#include <sys/socket.h>
+#include <netdb.h>
 #include <sys/types.h>
 #include <netinet/in.h>
+#include <sys/socket.h>
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -96,8 +97,6 @@ void runProxyServer()
         // }
 
         // TODO: connection.sendResponse();
-
-        break;
     }
 
     close(server_socket);
@@ -160,6 +159,72 @@ int initializeServerSocket(struct sockaddr_in& serv_addr)
         // TODO: Call logger
         exit(EXIT_FAILURE);
     }
+
+    return sockfd;
+}
+
+
+int connectToHost(const std::string& host, ConnectionStatus& status)
+{
+    int sockfd;
+    struct addrinfo hints, *servinfo, *p;
+    int rv;
+
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC; // Use IPv4 or IPv6
+    hints.ai_socktype = SOCK_STREAM; // Use TCP
+
+    char* host_name = strdup(host.c_str());
+    // Remove the port number from the host name
+    char* colon_char = strchr(host_name, ':');
+    if (colon_char != NULL)
+    {
+        *colon_char = '\0';
+    }
+
+    PRINT_DEBUG("Connecting to %s ...", host_name);
+
+    if ((rv = getaddrinfo(host_name, "http", &hints, &servinfo)) != 0)
+    {
+        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+        status = CANNOT_CONNECT_TO_HOST;
+        return -1;
+    }
+
+    // Loop through all the results and try to connect
+    for(p = servinfo; p != NULL; p = p->ai_next) {
+        if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
+            perror("socket");
+            continue;
+        }
+
+        if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+            close(sockfd);
+            perror("connect");
+            continue;
+        }
+
+        break;
+    }
+
+    if (p == NULL) {
+        fprintf(stderr, "client: failed to connect\n");
+        status = CANNOT_CONNECT_TO_HOST;
+        return -1;
+    }
+
+    // if (((struct sockaddr *) p->ai_addr)->sa_family == AF_INET)
+    // {
+    //     inet_ntop(p->ai_family, &(((struct sockaddr_in *)((struct sockaddr *) p->ai_addr))->sin_addr), s, sizeof s);
+    // }
+    // else
+    // {
+    //     inet_ntop(p->ai_family, &(((struct sockaddr_in6 *)((struct sockaddr *) p->ai_addr))->sin6_addr), s, sizeof s);
+    // }
+
+    freeaddrinfo(servinfo);
+
+    PRINT_DEBUG(" OK\n");
 
     return sockfd;
 }

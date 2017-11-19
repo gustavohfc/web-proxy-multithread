@@ -11,6 +11,6 @@
 
 std::string receiveHTTPMessage(int sockfd, ConnectionStatus& status);
 bool receiveWholeHTTPMessage(const std::string& message);
-void sendHTTPMessage(const std::string& host, std::string message, ConnectionStatus& status);
+void sendHTTPMessage(int sockfd, std::string message, ConnectionStatus& status);
 
 #endif // HTTP_H

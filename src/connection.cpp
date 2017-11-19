@@ -19,10 +19,11 @@
  * \param [in] server_socket File descriptor of the server socket.
  */
 Connection::Connection(int server_socket)
-    : client_request(nullptr), status(OK)
+    : client_request(nullptr), status(OK), response(nullptr)
 {
     PRINT_DEBUG("%s: Waiting for new connections\n", __PRETTY_FUNCTION__);
 
+    client_addr_length = sizeof client_addr;
     client_socket = accept(server_socket, (struct sockaddr *) &client_addr, &client_addr_length);
     if (client_socket == -1)
     {
