@@ -39,6 +39,7 @@ Connection::Connection(int server_socket)
 Connection::~Connection()
 {
     delete client_request;
+    delete response;
 
     if (client_socket != -1)
         close(client_socket);
