@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/wait.h>
 #include <csignal>
 #include <iostream>
 
@@ -48,6 +49,7 @@ void runProxyServer()
     struct sockaddr_in serv_addr;
     // Cache cache;
 
+    // Run a proxy server on a new process
     runLoggerServer();
 
     setParentSigaction();
@@ -66,24 +68,15 @@ void runProxyServer()
             close(client_socket);
             continue;
         }
-        else if(pid > 0)
-        {
-            // close(client_socket);
-            // printf("here2\n");
-            // continue;
-        }
         else if(pid == 0)
         {
-            setParentSigaction();
-            // char buf[100];
+            // setParentSigaction();
 
-            // printf("here 1\n");
-            // snprintf(buf, sizeof buf, "hi %d", counter);
-            // send(client_socket, buf, strlen(buf), 0);
-            // close(client_socket);
-            // break;
+            exit(EXIT_SUCCESS);
         }
 
+        // Clear zombie process
+        while(waitpid(-1, NULL, WNOHANG) > 0);
 
         // // Await for new connections
         // Connection connection(server_socket);
@@ -122,6 +115,9 @@ void runProxyServer()
 
         // // TODO: connection.sendResponse();
     }
+
+    // Wait all child process
+    waitpid(-1, NULL, 0);
 
     close(server_socket);
 }

@@ -11,24 +11,44 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <signal.h>
 #include <poll.h>
 #include <vector>
 #include <iostream>
 #include <fstream>
 
-
+/*!
+ * \brief Server port to receive new connections.
+ */
 #define LOGGER_SERVER_PORT 22222
 
+/*!
+ * \brief Indicates if a SIGINT was received.
+ */
+static bool SIGINT_received = false;
 
 // Functions prototype
 int createLoggerServerSocket();
-
+void setLoggerSigaction();
+void HandleSignalLogger(int signum);
 
 void runLoggerServer()
 {
     char buffer[1024];
     std::vector<pollfd> poll_sockets;
     pollfd logger_welcome_fd, new_fd;
+
+    // Start a new process
+    pid_t pid = fork();
+    if (pid == -1)
+    {
+        exit(EXIT_FAILURE);
+    }
+    else if(pid > 0)
+    {
+        // Parent process
+        return;
+    }
 
     std::ofstream log_file;
     log_file.open("log.txt", std::ios::out | std::ios::app);
@@ -42,7 +62,7 @@ void runLoggerServer()
 
     poll_sockets.push_back(logger_welcome_fd);
 
-    while(1)
+    while(!SIGINT_received || poll_sockets.size() > 1)
     {
         int poll_activity = poll(&poll_sockets[0], poll_sockets.size(), -1);
         if (poll_activity < 0)
@@ -104,7 +124,15 @@ void runLoggerServer()
         }
     }
 
+
+    for (auto fd : poll_sockets)
+    {
+        close(fd.fd);
+    }
+
     log_file.close();
+
+    exit(EXIT_SUCCESS);
 }
 
 
@@ -142,4 +170,24 @@ int createLoggerServerSocket()
     }
 
     return sockfd;
+}
+
+
+/*!
+ * \brief Specifies the action to be associated with a specific signal in the logger process.
+ */
+void setLoggerSigaction()
+{
+    // Register a signal handler to SIGINT
+    struct sigaction sa;
+    sa.sa_handler = HandleSignalLogger;
+    sa.sa_flags = 0;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGINT, &sa, NULL);
+}
+
+
+void HandleSignalLogger(int signum)
+{
+    SIGINT_received = true;
 }
