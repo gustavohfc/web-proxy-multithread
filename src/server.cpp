@@ -15,10 +15,6 @@
 #include <csignal>
 #include <iostream>
 
-#include "connection.h"
-#include "HTTP-request.h"
-#include "debug.h"
-#include "cache.h"
 
 /*!
  * \brief Server port to receive new connections.
@@ -37,8 +33,9 @@ static bool SIGINT_received = false;
 
 
 // Functions prototype
-static void SIGINTHandler(int signum);
 static int initializeServerSocket(struct sockaddr_in& serv_addr);
+static void HandleSignalParent(int signum);
+static void set_parent_sigaction();
 
 
 /*!
@@ -48,55 +45,79 @@ void runProxyServer()
 {
     int server_socket;
     struct sockaddr_in serv_addr;
-    Cache cache;
+    // Cache cache;
 
-    // Register a signal handler to SIGINT
-    struct sigaction sa;
-    sa.sa_handler = SIGINTHandler;
-    sa.sa_flags = 0;
-    sigemptyset(&sa.sa_mask);
-    sigaction(SIGINT, &sa, NULL);
+    set_parent_sigaction();
 
     server_socket = initializeServerSocket(serv_addr);
 
     while (!SIGINT_received)
     {
-        // Await for new connections
-        Connection connection(server_socket);
-        if (SIGINT_received)
-        {
-            break;
-        }
+        struct sockaddr_in client_addr;
+        socklen_t client_addr_length = sizeof client_addr;
+        int client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &client_addr_length);
 
-        connection.receiveRequest();
-        if (connection.status != OK)
+        pid_t pid = fork();
+        if (pid == -1)
         {
-            // TODO: connection.sendError()
+            close(client_socket);
             continue;
         }
-
-        // TODO: filter.request(connection)
-        // if (connection.status != OK)
-        // {
-            // TODO: connection.sendError()
-            // continue;
-        // }
-
-        cache.getResponseMessage(connection);
-        if (connection.status != OK)
+        else if(pid > 0)
         {
-            // TODO: connection.sendError()
-            continue;
+            // close(client_socket);
+            // printf("here2\n");
+            // continue;
+        }
+        else if(pid == 0)
+        {
+            set_parent_sigaction();
+            // char buf[100];
+
+            // printf("here 1\n");
+            // snprintf(buf, sizeof buf, "hi %d", counter);
+            // send(client_socket, buf, strlen(buf), 0);
+            // close(client_socket);
+            // break;
         }
 
-        // TODO: filter.response(connection)
-        // if (connection.status != OK)
+
+        // // Await for new connections
+        // Connection connection(server_socket);
+        // if (SIGINT_received)
         // {
-            // TODO: connection.sendError()
-            // continue;
+        //     break;
         // }
 
-        // TODO: connection.sendResponse();
+        // connection.receiveRequest();
+        // if (connection.status != OK)
+        // {
+        //     // TODO: connection.sendError()
+        //     continue;
+        // }
+
+        // // TODO: filter.request(connection)
+        // // if (connection.status != OK)
+        // // {
+        //     // TODO: connection.sendError()
+        //     // continue;
+        // // }
+
+        // cache.getResponseMessage(connection);
+        // if (connection.status != OK)
+        // {
+        //     // TODO: connection.sendError()
+        //     continue;
+        // }
+
+        // // TODO: filter.response(connection)
+        // // if (connection.status != OK)
+        // // {
+        //     // TODO: connection.sendError()
+        //     // continue;
+        // // }
+
+        // // TODO: connection.sendResponse();
     }
 
     close(server_socket);
@@ -104,10 +125,20 @@ void runProxyServer()
 
 
 /*!
- * \brief Handles the SIGINT, setting the flag SIGINT_received to true so the
- *        program can terminate normally.
+ * \brief Specifies the action to be associated with a specific signal in the parent process.
  */
-void SIGINTHandler(int signum)
+void set_parent_sigaction()
+{
+    // Register a signal handler to SIGINT
+    struct sigaction sa;
+    sa.sa_handler = HandleSignalParent;
+    sa.sa_flags = 0;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGINT, &sa, NULL);
+}
+
+
+void HandleSignalParent(int signum)
 {
     SIGINT_received = true;
 }
@@ -164,67 +195,67 @@ int initializeServerSocket(struct sockaddr_in& serv_addr)
 }
 
 
-int connectToHost(const std::string& host, ConnectionStatus& status)
-{
-    int sockfd;
-    struct addrinfo hints, *servinfo, *p;
-    int rv;
+// int connectToHost(const std::string& host, ConnectionStatus& status)
+// {
+//     int sockfd;
+//     struct addrinfo hints, *servinfo, *p;
+//     int rv;
 
-    memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_UNSPEC; // Use IPv4 or IPv6
-    hints.ai_socktype = SOCK_STREAM; // Use TCP
+//     memset(&hints, 0, sizeof hints);
+//     hints.ai_family = AF_UNSPEC; // Use IPv4 or IPv6
+//     hints.ai_socktype = SOCK_STREAM; // Use TCP
 
-    char* host_name = strdup(host.c_str());
-    // Remove the port number from the host name
-    char* colon_char = strchr(host_name, ':');
-    if (colon_char != NULL)
-    {
-        *colon_char = '\0';
-    }
+//     char* host_name = strdup(host.c_str());
+//     // Remove the port number from the host name
+//     char* colon_char = strchr(host_name, ':');
+//     if (colon_char != NULL)
+//     {
+//         *colon_char = '\0';
+//     }
 
-    PRINT_DEBUG("Connecting to %s ...", host_name);
+//     PRINT_DEBUG("Connecting to %s ...", host_name);
 
-    if ((rv = getaddrinfo(host_name, "http", &hints, &servinfo)) != 0)
-    {
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-        status = CANNOT_CONNECT_TO_HOST;
-        return -1;
-    }
+//     if ((rv = getaddrinfo(host_name, "http", &hints, &servinfo)) != 0)
+//     {
+//         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+//         status = CANNOT_CONNECT_TO_HOST;
+//         return -1;
+//     }
 
-    // Loop through all the results and try to connect
-    for(p = servinfo; p != NULL; p = p->ai_next) {
-        if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-            perror("socket");
-            continue;
-        }
+//     // Loop through all the results and try to connect
+//     for(p = servinfo; p != NULL; p = p->ai_next) {
+//         if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
+//             perror("socket");
+//             continue;
+//         }
 
-        if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
-            close(sockfd);
-            perror("connect");
-            continue;
-        }
+//         if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+//             close(sockfd);
+//             perror("connect");
+//             continue;
+//         }
 
-        break;
-    }
+//         break;
+//     }
 
-    if (p == NULL) {
-        fprintf(stderr, "client: failed to connect\n");
-        status = CANNOT_CONNECT_TO_HOST;
-        return -1;
-    }
+//     if (p == NULL) {
+//         fprintf(stderr, "client: failed to connect\n");
+//         status = CANNOT_CONNECT_TO_HOST;
+//         return -1;
+//     }
 
-    // if (((struct sockaddr *) p->ai_addr)->sa_family == AF_INET)
-    // {
-    //     inet_ntop(p->ai_family, &(((struct sockaddr_in *)((struct sockaddr *) p->ai_addr))->sin_addr), s, sizeof s);
-    // }
-    // else
-    // {
-    //     inet_ntop(p->ai_family, &(((struct sockaddr_in6 *)((struct sockaddr *) p->ai_addr))->sin6_addr), s, sizeof s);
-    // }
+//     // if (((struct sockaddr *) p->ai_addr)->sa_family == AF_INET)
+//     // {
+//     //     inet_ntop(p->ai_family, &(((struct sockaddr_in *)((struct sockaddr *) p->ai_addr))->sin_addr), s, sizeof s);
+//     // }
+//     // else
+//     // {
+//     //     inet_ntop(p->ai_family, &(((struct sockaddr_in6 *)((struct sockaddr *) p->ai_addr))->sin6_addr), s, sizeof s);
+//     // }
 
-    freeaddrinfo(servinfo);
+//     freeaddrinfo(servinfo);
 
-    PRINT_DEBUG(" OK\n");
+//     PRINT_DEBUG(" OK\n");
 
-    return sockfd;
-}
+//     return sockfd;
+// }

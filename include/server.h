@@ -7,9 +7,8 @@
 #define SERVER_H
 
 #include <string>
-#include "connection.h"
 
 void runProxyServer();
-int connectToHost(const std::string& host, ConnectionStatus& status);
+// int connectToHost(const std::string& host, ConnectionStatus& status);
 
 #endif // SERVER_H
