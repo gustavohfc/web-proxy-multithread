@@ -17,6 +17,7 @@
 #include <iostream>
 
 #include "logger.h"
+#include "connection.h"
 
 /*!
  * \brief Server port to receive new connections.
@@ -38,6 +39,7 @@ static bool SIGINT_received = false;
 static int initializeServerSocket(struct sockaddr_in& serv_addr);
 static void HandleSignalParent(int signum);
 static void setParentSigaction();
+static void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t client_addr_length);
 
 
 /*!
@@ -82,6 +84,7 @@ void runProxyServer()
     {
         struct sockaddr_in client_addr;
         socklen_t client_addr_length = sizeof client_addr;
+
         int client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &client_addr_length);
         if (client_socket < 0)
         {
@@ -98,49 +101,13 @@ void runProxyServer()
         else if(pid == 0)
         {
             // setParentSigaction();
-
+            handleRequest(client_socket, client_addr, client_addr_length);
             exit(EXIT_SUCCESS);
         }
 
         // Clear zombie process
         while(waitpid(-1, NULL, WNOHANG) > 0);
 
-        // // Await for new connections
-        // Connection connection(server_socket);
-        // if (SIGINT_received)
-        // {
-        //     break;
-        // }
-
-        // connection.receiveRequest();
-        // if (connection.status != OK)
-        // {
-        //     // TODO: connection.sendError()
-        //     continue;
-        // }
-
-        // // TODO: filter.request(connection)
-        // // if (connection.status != OK)
-        // // {
-        //     // TODO: connection.sendError()
-        //     // continue;
-        // // }
-
-        // cache.getResponseMessage(connection);
-        // if (connection.status != OK)
-        // {
-        //     // TODO: connection.sendError()
-        //     continue;
-        // }
-
-        // // TODO: filter.response(connection)
-        // // if (connection.status != OK)
-        // // {
-        //     // TODO: connection.sendError()
-        //     // continue;
-        // // }
-
-        // // TODO: connection.sendResponse();
     }
 
     close(logger_socket);
@@ -305,4 +272,39 @@ int send_buffer(int socketfd, const unsigned char *buffer, const uint n_bytes)
     }
 
     return 0;
+}
+
+void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t client_addr_length)
+{
+    Connection connection(client_socket, client_addr, client_addr_length);
+
+    // connection.receiveRequest();
+    // if (connection.status != OK)
+    // {
+    //     // TODO: connection.sendError()
+    //     continue;
+    // }
+
+    // // TODO: filter.request(connection)
+    // // if (connection.status != OK)
+    // // {
+    //     // TODO: connection.sendError()
+    //     // continue;
+    // // }
+
+    // cache.getResponseMessage(connection);
+    // if (connection.status != OK)
+    // {
+    //     // TODO: connection.sendError()
+    //     continue;
+    // }
+
+    // // TODO: filter.response(connection)
+    // // if (connection.status != OK)
+    // // {
+    //     // TODO: connection.sendError()
+    //     // continue;
+    // // }
+
+    // // TODO: connection.sendResponse();
 }
