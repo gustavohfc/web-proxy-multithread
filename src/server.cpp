@@ -15,6 +15,7 @@
 #include <csignal>
 #include <iostream>
 
+#include "logger.h"
 
 /*!
  * \brief Server port to receive new connections.
@@ -35,7 +36,7 @@ static bool SIGINT_received = false;
 // Functions prototype
 static int initializeServerSocket(struct sockaddr_in& serv_addr);
 static void HandleSignalParent(int signum);
-static void set_parent_sigaction();
+static void setParentSigaction();
 
 
 /*!
@@ -47,7 +48,9 @@ void runProxyServer()
     struct sockaddr_in serv_addr;
     // Cache cache;
 
-    set_parent_sigaction();
+    runLoggerServer();
+
+    setParentSigaction();
 
     server_socket = initializeServerSocket(serv_addr);
 
@@ -71,7 +74,7 @@ void runProxyServer()
         }
         else if(pid == 0)
         {
-            set_parent_sigaction();
+            setParentSigaction();
             // char buf[100];
 
             // printf("here 1\n");
@@ -127,7 +130,7 @@ void runProxyServer()
 /*!
  * \brief Specifies the action to be associated with a specific signal in the parent process.
  */
-void set_parent_sigaction()
+void setParentSigaction()
 {
     // Register a signal handler to SIGINT
     struct sigaction sa;
