@@ -45,7 +45,7 @@ static void setParentSigaction();
  */
 void runProxyServer()
 {
-    int server_socket;
+    int server_socket, logger_socket;
     struct sockaddr_in serv_addr;
     // Cache cache;
 
@@ -54,6 +54,28 @@ void runProxyServer()
 
     setParentSigaction();
 
+    // Try to connect to the logger server, it try a few times because it may take a while to the
+    // server start to accept connections
+    for (int n_try = 0; n_try < 5; n_try++)
+    {
+        logger_socket = connectToLogger();
+
+        if (logger_socket < 0)
+        {
+            usleep(500000);
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    if (logger_socket < 0)
+    {
+        exit(EXIT_FAILURE);
+    }
+
+    // Create a socket to accept requests
     server_socket = initializeServerSocket(serv_addr);
 
     while (!SIGINT_received)
@@ -61,6 +83,11 @@ void runProxyServer()
         struct sockaddr_in client_addr;
         socklen_t client_addr_length = sizeof client_addr;
         int client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &client_addr_length);
+        if (client_socket < 0)
+        {
+            log(logger_socket, "Accept() fail");
+            continue;
+        }
 
         pid_t pid = fork();
         if (pid == -1)
@@ -115,6 +142,8 @@ void runProxyServer()
 
         // // TODO: connection.sendResponse();
     }
+
+    close(logger_socket);
 
     // Wait all child process
     waitpid(-1, NULL, 0);
@@ -258,3 +287,22 @@ int initializeServerSocket(struct sockaddr_in& serv_addr)
 
 //     return sockfd;
 // }
+
+
+int send_buffer(int socketfd, const unsigned char *buffer, const uint n_bytes)
+{
+    uint bytes_sent = 0;
+
+    while (bytes_sent != n_bytes)
+    {
+        int rv = send(socketfd, buffer, n_bytes - bytes_sent, 0);
+        if (rv < 0)
+        {
+            return -1;
+        }
+
+        bytes_sent += rv;
+    }
+
+    return 0;
+}

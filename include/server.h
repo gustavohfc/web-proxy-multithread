@@ -10,5 +10,6 @@
 
 void runProxyServer();
 // int connectToHost(const std::string& host, ConnectionStatus& status);
+int send_buffer(int socketfd, const unsigned char *buffer, const uint n_bytes);
 
 #endif // SERVER_H

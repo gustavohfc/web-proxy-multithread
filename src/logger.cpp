@@ -9,6 +9,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <string.h>
+#include <string>
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
@@ -16,6 +17,9 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+
+#include "logger.h"
+#include "server.h"
 
 /*!
  * \brief Server port to receive new connections.
@@ -50,6 +54,8 @@ void runLoggerServer()
         return;
     }
 
+    setLoggerSigaction();
+
     std::ofstream log_file;
     log_file.open("log.txt", std::ios::out | std::ios::app);
 
@@ -78,7 +84,8 @@ void runLoggerServer()
                 if (poll_sockets[i].fd == logger_welcome_fd.fd)
                 {
                     // Accept new connection
-                    if((new_fd.fd = accept(poll_sockets[i].fd, NULL, NULL)) == -1) {
+                    if((new_fd.fd = accept(poll_sockets[i].fd, NULL, NULL)) == -1)
+                    {
                         log_file << "Falha no accept()" << std::endl;
                         continue;
                     }
@@ -190,4 +197,38 @@ void setLoggerSigaction()
 void HandleSignalLogger(int signum)
 {
     SIGINT_received = true;
+}
+
+
+void log(int logger_socket, std::string message)
+{
+    message.append("\n");
+    send_buffer(logger_socket, (unsigned char *) message.c_str(), message.size());
+}
+
+
+int connectToLogger()
+{
+    int socketfd;
+    struct sockaddr_in loggerServerAddr;
+
+    //Create socket
+    socketfd = socket(AF_INET , SOCK_STREAM , 0);
+    if (socketfd == -1)
+    {
+        return -1;
+    }
+
+    loggerServerAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    loggerServerAddr.sin_family = AF_INET;
+    loggerServerAddr.sin_port = htons(LOGGER_SERVER_PORT);
+
+    //Connect to logger server
+    if (connect(socketfd , (struct sockaddr *)&loggerServerAddr , sizeof(loggerServerAddr)) < 0)
+    {
+        return -1;
+    }
+
+
+    return socketfd;
 }
