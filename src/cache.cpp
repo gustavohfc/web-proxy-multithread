@@ -2,7 +2,7 @@
 #include "cache.h"
 #include "server.h"
 
-void getResponseMessage(Connection connection)
+void getResponseMessage(Connection& connection)
 {
     // TODO: lock file
     // TODO: consult cache

@@ -107,8 +107,12 @@ void runProxyServer()
         else if(pid == 0)
         {
             process_number = process_count;
+            connectToLogger(process_number);
             // setParentSigaction();
+
             handleRequest(client_socket, client_addr, client_addr_length);
+
+            disconnectFromLogger();
             exit(EXIT_SUCCESS);
         }
         else
@@ -272,7 +276,7 @@ void receiveMessage(int socket, HTTPMessage& message, ConnectionStatus& status)
         }
         else if (n_bytes == 0)
         {
-            fprintf(stderr, "Connection close before receiving the whole message.\n");
+            log("Connection close before receiving the whole message.");
             // TODO: Call logger
             status = INVALID_REQUEST;
             break;

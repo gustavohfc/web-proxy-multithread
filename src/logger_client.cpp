@@ -53,6 +53,13 @@ bool connectToLogger(uint _process_number)
 }
 
 
+void disconnectFromLogger()
+{
+    if (logger_socket != -1)
+        close(logger_socket);
+}
+
+
 void log(std::string message)
 {
     char timestamp[80];

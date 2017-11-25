@@ -4,6 +4,6 @@
 
 #include "connection.h"
 
-void getResponseMessage(Connection connection);
+void getResponseMessage(Connection& connection);
 
 #endif // CACHE_H

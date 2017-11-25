@@ -10,5 +10,6 @@
 
 void log(std::string message);
 bool connectToLogger(uint _process_number);
+void disconnectFromLogger();
 
 #endif // LOGGER_CLIENT_H
