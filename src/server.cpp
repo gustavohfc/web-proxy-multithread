@@ -16,7 +16,8 @@
 #include <csignal>
 #include <iostream>
 
-#include "logger.h"
+#include "logger_server.h"
+#include "logger_client.h"
 #include "connection.h"
 #include "cache.h"
 
@@ -51,9 +52,9 @@ static void handleRequest(int client_socket, struct sockaddr_in client_addr, soc
  */
 void runProxyServer()
 {
-    int server_socket, logger_socket;
+    int server_socket;
     struct sockaddr_in serv_addr;
-    // Cache cache;
+    uint process_number = 0, process_count = 1;
 
     // Run a proxy server on a new process
     runLoggerServer();
@@ -62,21 +63,22 @@ void runProxyServer()
 
     // Try to connect to the logger server, it try a few times because it may take a while to the
     // server start to accept connections
+    bool connectedToLogger;
     for (int n_try = 0; n_try < 5; n_try++)
     {
-        logger_socket = connectToLogger();
+        connectedToLogger = connectToLogger(process_number);
 
-        if (logger_socket < 0)
-        {
-            usleep(500000);
-        }
-        else
+        if (connectedToLogger)
         {
             break;
         }
+        else
+        {
+            usleep(500000);
+        }
     }
 
-    if (logger_socket < 0)
+    if (!connectedToLogger)
     {
         exit(EXIT_FAILURE);
     }
@@ -92,7 +94,7 @@ void runProxyServer()
         int client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &client_addr_length);
         if (client_socket < 0)
         {
-            log(logger_socket, "Accept() fail");
+            log("Accept() fail");
             continue;
         }
 
@@ -104,9 +106,14 @@ void runProxyServer()
         }
         else if(pid == 0)
         {
+            process_number = process_count;
             // setParentSigaction();
             handleRequest(client_socket, client_addr, client_addr_length);
             exit(EXIT_SUCCESS);
+        }
+        else
+        {
+            process_count++;
         }
 
         // Clear zombie process
@@ -114,7 +121,7 @@ void runProxyServer()
 
     }
 
-    close(logger_socket);
+    // close(logger_socket);
 
     // Wait all child process
     waitpid(-1, NULL, 0);

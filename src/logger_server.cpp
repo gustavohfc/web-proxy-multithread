@@ -1,5 +1,5 @@
 /*!
- * \file logger.cpp
+ * \file logger_server.cpp
  * \author Gustavo Henrique Fernandes Carvalho
  */
 
@@ -18,13 +18,8 @@
 #include <iostream>
 #include <fstream>
 
-#include "logger.h"
+#include "logger_server.h"
 #include "server.h"
-
-/*!
- * \brief Server port to receive new connections.
- */
-#define LOGGER_SERVER_PORT 22222
 
 /*!
  * \brief Indicates if a SIGINT was received.
@@ -35,6 +30,7 @@ static bool SIGINT_received = false;
 int createLoggerServerSocket();
 void setLoggerSigaction();
 void HandleSignalLogger(int signum);
+
 
 void runLoggerServer()
 {
@@ -197,38 +193,4 @@ void setLoggerSigaction()
 void HandleSignalLogger(int signum)
 {
     SIGINT_received = true;
-}
-
-
-void log(int logger_socket, std::string message)
-{
-    message.append("\n");
-    send_buffer(logger_socket, (unsigned char *) message.c_str(), message.size());
-}
-
-
-int connectToLogger()
-{
-    int socketfd;
-    struct sockaddr_in loggerServerAddr;
-
-    //Create socket
-    socketfd = socket(AF_INET , SOCK_STREAM , 0);
-    if (socketfd == -1)
-    {
-        return -1;
-    }
-
-    loggerServerAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    loggerServerAddr.sin_family = AF_INET;
-    loggerServerAddr.sin_port = htons(LOGGER_SERVER_PORT);
-
-    //Connect to logger server
-    if (connect(socketfd , (struct sockaddr *)&loggerServerAddr , sizeof(loggerServerAddr)) < 0)
-    {
-        return -1;
-    }
-
-
-    return socketfd;
 }

@@ -32,9 +32,6 @@ Connection::~Connection()
 
     if (server_socket != -1)
         close(server_socket);
-
-    if (logger_socket != -1)
-        close(logger_socket);
 }
 
 

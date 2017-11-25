@@ -21,7 +21,7 @@ private:
 
 
 public:
-    int client_socket, server_socket, logger_socket;
+    int client_socket, server_socket;
     ConnectionStatus status;
     HTTPMessage client_request;
     HTTPMessage response;
