@@ -7,9 +7,11 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "connection.h"
-// #include "HTTP.h"
+#include "server.h"
+
 
 /*!
  * \brief Initialize a connection object with a new client request.
@@ -18,7 +20,7 @@
  */
 Connection::Connection(int client_socket, struct sockaddr_in client_addr, socklen_t client_addr_length)
     : client_addr(client_addr), client_addr_length(client_addr_length), client_socket(client_socket), status(OK),
-      client_request(REQUEST), server_request(REQUEST), response(RESPONSE)
+      client_request(REQUEST), response(RESPONSE)
 {
 }
 
@@ -38,5 +40,16 @@ Connection::~Connection()
 
 void Connection::receiveRequest()
 {
-    // client_request = new HTTPRequest(receiveHTTPMessage(client_socket, status));
+    receiveMessage(client_socket, client_request, status);
+}
+
+void Connection::receiveServerResponse()
+{
+    receiveMessage(server_socket, response, status);
+}
+
+
+void Connection::sendResponse()
+{
+    send_buffer(client_socket, (unsigned char *) response.getMessage(), response.getMessageLength());
 }

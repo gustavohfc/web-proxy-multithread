@@ -18,6 +18,7 @@
 
 #include "logger.h"
 #include "connection.h"
+#include "cache.h"
 
 /*!
  * \brief Server port to receive new connections.
@@ -33,6 +34,9 @@ static const int LISTEN_BACKLOG_SIZE = 20;
  * \brief Indicates if a SIGINT was received.
  */
 static bool SIGINT_received = false;
+
+
+#define BUFFER_SIZE 256
 
 
 // Functions prototype
@@ -190,70 +194,93 @@ int initializeServerSocket(struct sockaddr_in& serv_addr)
 }
 
 
-// int connectToHost(const std::string& host, ConnectionStatus& status)
-// {
-//     int sockfd;
-//     struct addrinfo hints, *servinfo, *p;
-//     int rv;
+int connectToHost(const std::string& host, ConnectionStatus& status)
+{
+    int sockfd;
+    struct addrinfo hints, *servinfo, *p;
+    int rv;
 
-//     memset(&hints, 0, sizeof hints);
-//     hints.ai_family = AF_UNSPEC; // Use IPv4 or IPv6
-//     hints.ai_socktype = SOCK_STREAM; // Use TCP
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC; // Use IPv4 or IPv6
+    hints.ai_socktype = SOCK_STREAM; // Use TCP
 
-//     char* host_name = strdup(host.c_str());
-//     // Remove the port number from the host name
-//     char* colon_char = strchr(host_name, ':');
-//     if (colon_char != NULL)
-//     {
-//         *colon_char = '\0';
-//     }
+    char* host_name = strdup(host.c_str());
+    // Remove the port number from the host name
+    char* colon_char = strchr(host_name, ':');
+    if (colon_char != NULL)
+    {
+        *colon_char = '\0';
+    }
 
-//     PRINT_DEBUG("Connecting to %s ...", host_name);
+    if ((rv = getaddrinfo(host_name, "http", &hints, &servinfo)) != 0)
+    {
+        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+        status = CANNOT_CONNECT_TO_HOST;
+        return -1;
+    }
 
-//     if ((rv = getaddrinfo(host_name, "http", &hints, &servinfo)) != 0)
-//     {
-//         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-//         status = CANNOT_CONNECT_TO_HOST;
-//         return -1;
-//     }
+    // Loop through all the results and try to connect
+    for(p = servinfo; p != NULL; p = p->ai_next) {
+        if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
+            perror("socket");
+            continue;
+        }
 
-//     // Loop through all the results and try to connect
-//     for(p = servinfo; p != NULL; p = p->ai_next) {
-//         if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-//             perror("socket");
-//             continue;
-//         }
+        if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+            close(sockfd);
+            perror("connect");
+            continue;
+        }
 
-//         if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
-//             close(sockfd);
-//             perror("connect");
-//             continue;
-//         }
+        break;
+    }
 
-//         break;
-//     }
+    if (p == NULL) {
+        fprintf(stderr, "client: failed to connect\n");
+        status = CANNOT_CONNECT_TO_HOST;
+        return -1;
+    }
 
-//     if (p == NULL) {
-//         fprintf(stderr, "client: failed to connect\n");
-//         status = CANNOT_CONNECT_TO_HOST;
-//         return -1;
-//     }
+    freeaddrinfo(servinfo);
 
-//     // if (((struct sockaddr *) p->ai_addr)->sa_family == AF_INET)
-//     // {
-//     //     inet_ntop(p->ai_family, &(((struct sockaddr_in *)((struct sockaddr *) p->ai_addr))->sin_addr), s, sizeof s);
-//     // }
-//     // else
-//     // {
-//     //     inet_ntop(p->ai_family, &(((struct sockaddr_in6 *)((struct sockaddr *) p->ai_addr))->sin6_addr), s, sizeof s);
-//     // }
+    return sockfd;
+}
 
-//     freeaddrinfo(servinfo);
 
-//     PRINT_DEBUG(" OK\n");
+void receiveMessage(int socket, HTTPMessage& message, ConnectionStatus& status)
+{
+    std::string header_buffer;
+    char *buffer = new char[BUFFER_SIZE];
 
-//     return sockfd;
-// }
+    do
+    {
+        // Receive a piece of the message
+        int n_bytes = recv(socket, buffer, BUFFER_SIZE - 1, 0);
+        if (n_bytes < 0)
+        {
+            perror("recv");
+            // TODO: Call logger
+            status = INVALID_REQUEST;
+            break;
+        }
+        else if (n_bytes == 0)
+        {
+            fprintf(stderr, "Connection close before receiving the whole message.\n");
+            // TODO: Call logger
+            status = INVALID_REQUEST;
+            break;
+        }
+
+        buffer[n_bytes] = '\0';
+
+        status = message.addMessageData(buffer, n_bytes);
+        if (status != OK)
+            break;
+
+    } while (!message.is_message_complete());
+
+    delete[] buffer;
+}
 
 
 int send_buffer(int socketfd, const unsigned char *buffer, const uint n_bytes)
@@ -278,12 +305,12 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
 {
     Connection connection(client_socket, client_addr, client_addr_length);
 
-    // connection.receiveRequest();
-    // if (connection.status != OK)
-    // {
-    //     // TODO: connection.sendError()
-    //     continue;
-    // }
+    connection.receiveRequest();
+    if (connection.status != OK)
+    {
+        // TODO: connection.sendError()
+        return;
+    }
 
     // // TODO: filter.request(connection)
     // // if (connection.status != OK)
@@ -292,12 +319,12 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
     //     // continue;
     // // }
 
-    // cache.getResponseMessage(connection);
-    // if (connection.status != OK)
-    // {
+    getResponseMessage(connection);
+    if (connection.status != OK)
+    {
     //     // TODO: connection.sendError()
-    //     continue;
-    // }
+        return;
+    }
 
     // // TODO: filter.response(connection)
     // // if (connection.status != OK)
@@ -306,5 +333,5 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
     //     // continue;
     // // }
 
-    // // TODO: connection.sendResponse();
+    connection.sendResponse();
 }

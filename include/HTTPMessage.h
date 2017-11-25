@@ -8,17 +8,21 @@
 #define HTTP_MESSAGE_H
 
 #include <string>
+#include <vector>
 #include <map>
 
-enum HTTPMessageType {REQUEST, RESPONSE, QWEASDZXC};
+enum ConnectionStatus {OK, INVALID_REQUEST, TIMEOUT, FILTER_BLOCKED, CANNOT_SEND_MESSAGE_TO_HOST, CANNOT_CONNECT_TO_HOST};
+
+enum HTTPMessageType {REQUEST, RESPONSE};
 
 class HTTPMessage
 {
 private:
+    bool header_complete, body_complete;
     HTTPMessageType type;
 
     // Used on request messages
-    std::string url;
+    std::string path;
     std::string method;
 
     // Used on response messages
@@ -26,8 +30,9 @@ private:
     std::string status_phrase;
 
     std::string version;
+
     std::map<std::string, std::string> headers;
-    char *body;
+    std::vector<char> message;
 
 public:
     // Request constructors
@@ -42,13 +47,21 @@ public:
 
     ~HTTPMessage();
 
-    std::string toMessage() const;
+    ConnectionStatus addMessageData(const char *buffer, int n_bytes);
+    void parseHeaders();
+    const char * getMessage() const;
+    int getMessageLength() const;
+    const char * getBody() const;
+    int getBodyLength() const;
+    std::string getHost() const;
 
+    const bool is_message_complete() const { return header_complete && body_complete; };
     const std::string& getMethod() const { return method; };
-    const std::string& getUrl() const { return url; };
+    const std::string& getPath() const { return path; };
+    const int getStatusCode() const { return status_code; };
+    const std::string& getStatusPhrase() const { return status_phrase; };
     const std::string& getVersion() const { return version; };
     const std::map<std::string, std::string>& getHeaders() const { return headers; };
-    const char * getBody() const { return body; };
 };
 
 #endif // HTTP_MESSAGE_H
