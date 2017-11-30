@@ -3,10 +3,8 @@
  * \author Andre Luis Souto
  */
 
-#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string>
 #include <fstream>
 
 #include "filter.h"
@@ -54,4 +52,52 @@ void Filter::readDenyTerms(vector<string> &deny_terms){
 		deny_terms.push_back(line);    	
 	}
 
+}
+
+
+// Filtering the request
+void Filter::filteringRequest(HTTPMessage clientRequest){
+
+	std::size_t i = 0;
+	vector<string> whitelist, blacklist, deny_terms;
+	string url;
+	int flag_wl = 0;// flag_bl = 0;
+
+
+	Filter::readWhiteList(whitelist);
+	Filter::readBlackList(blacklist);
+	Filter::readDenyTerms(deny_terms);
+
+
+	url = clientRequest.getHost();
+
+	//TODO : separar em funcoes
+	// Checking whitelist
+	for (i = 0; i < whitelist.size(); i++){
+
+		if(strcmp(whitelist[i].c_str(), url.c_str()) == 0){
+			//........... OK
+			flag_wl = 1;
+		}
+
+	}
+
+
+	// Checking blacklist
+	if (flag_wl == 0){
+		
+		for (i = 0; i < blacklist.size(); i++){
+
+			if(strcmp(blacklist[i].c_str(), url.c_str()) == 0){
+				//........... OK
+				//flag_bl = 1;
+			}
+
+		}
+	}
+
+
+
+	// Checking deny_terms
+	//......
 }

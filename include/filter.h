@@ -6,10 +6,8 @@
 #ifndef FILTER_H
 #define FILTER_H
 
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
 #include <string>
+#include <string.h>
 
 #include "logger_client.h"
 #include "logger_server.h"
@@ -18,13 +16,14 @@
 class Filter
 {
 private:
-    
 
-
-public:
 	void readWhiteList(std::vector<std::string> &whitelist);
 	void readBlackList(std::vector<std::string> &blacklist);
 	void readDenyTerms(std::vector<std::string> &deny_terms);
+
+public:
+
+	void filteringRequest(HTTPMessage clientRequest);
 
 };
 
