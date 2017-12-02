@@ -24,7 +24,8 @@ private:
 
 public:
 
-	void filteringRequest(HTTPMessage clientRequest);
+	int filteringRequest(HTTPMessage clientRequest);
+	int filteringResponse(HTTPMessage response)
 
 };
 
