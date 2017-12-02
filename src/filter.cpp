@@ -89,6 +89,7 @@ void Filter::readDenyTerms(vector<string> &deny_terms){
 }
 
 
+// Checking if list has url
 int Filter::checkInList(vector<string> &list, string &url){
 
 
@@ -110,9 +111,9 @@ int Filter::checkInList(vector<string> &list, string &url){
 
 
 // Filtering request message
-int Filter::filteringRequest(HTTPMessage clientRequest){
+ConnectionStatus Filter::filteringRequest(HTTPMessage clientRequest){
 
-	std::size_t i = 0;
+
 	vector<string> whitelist, blacklist, deny_terms;
 	string url;
 	int flag_wl = 0, flag_bl = 0;
@@ -128,9 +129,9 @@ int Filter::filteringRequest(HTTPMessage clientRequest){
 	flag_wl = Filter::checkInList(whitelist,url);
 
 	if (flag_wl == 1){
-		//Encaminha amensagem ao destinatario, aguarda resposta, gera log autorizando, encaminha resposta
+		
 		// Url is in white list
-		return 1;
+		return OK;
 	}
 
 	// Checking blacklist
@@ -140,20 +141,23 @@ int Filter::filteringRequest(HTTPMessage clientRequest){
 	}
 
 	if (flag_bl == 1){
-		//Descarta requisicao, envia mensagem de violacao, gera log recusando
+		
 		// Url is in black list
-		return -1;
+		return FILTER_BLOCKED;
 	}
 
 
 	// Checking deny_terms
 	//......
+	return OK;
 }
 
 
 // Filtering response message
-int Filter::filteringResponse(HTTPMessage response){
+ConnectionStatus Filter::filteringResponse(HTTPMessage response){
 
 	//Deny_terms
+
+	return OK;
 
 }

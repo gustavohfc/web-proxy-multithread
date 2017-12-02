@@ -324,13 +324,13 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
         return;
     }
 
-    //Filter filter;
-    //filter.filteringRequest(connection.client_request);
-    // // if (connection.status != OK)
-    // // {
+    Filter filter;
+    connection.status = filter.filteringRequest(connection.client_request);
+    if (connection.status != OK)
+    {
     //     // TODO: connection.sendError()
     //     // continue;
-    // // }
+    }
 
     getResponseMessage(connection);
     if (connection.status != OK)
@@ -339,12 +339,12 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
         return;
     }
 
-    // // TODO: filter.response(connection)
-    // // if (connection.status != OK)
-    // // {
+    connection.status = filter.filteringResponse(connection.response);
+    if (connection.status != OK)
+    {
     //     // TODO: connection.sendError()
     //     // continue;
-    // // }
+    }
 
     connection.sendResponse();
 }
