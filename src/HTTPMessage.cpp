@@ -135,7 +135,7 @@ const char * HTTPMessage::getBody() const
 
 int HTTPMessage::getBodyLength() const
 {
-    return strstr(&message[0], "\r\n\r\n") + 3 - &message[0];
+    return message.size() - (strstr(&message[0], "\r\n\r\n") - &message[0] + 4);
 }
 
 
