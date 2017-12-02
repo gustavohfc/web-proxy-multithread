@@ -150,6 +150,7 @@ ConnectionStatus Filter::filteringRequest(HTTPMessage clientRequest){
 	// Checking deny_terms
 	//......
 	return OK;
+
 }
 
 
@@ -159,5 +160,4 @@ ConnectionStatus Filter::filteringResponse(HTTPMessage response){
 	//Deny_terms
 
 	return OK;
-
 }
