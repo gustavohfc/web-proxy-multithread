@@ -112,7 +112,7 @@ int Filter::checkInList(vector<string> &list, string &url){
 // Filtering request message
 int Filter::filteringRequest(HTTPMessage clientRequest){
 
-	std::size_t i = 0;
+	// std::size_t i = 0;
 	vector<string> whitelist, blacklist, deny_terms;
 	string url;
 	int flag_wl = 0, flag_bl = 0;
@@ -148,6 +148,9 @@ int Filter::filteringRequest(HTTPMessage clientRequest){
 
 	// Checking deny_terms
 	//......
+
+	//temp
+	return 0;
 }
 
 
@@ -156,4 +159,7 @@ int Filter::filteringResponse(HTTPMessage response){
 
 	//Deny_terms
 
+
+	// temp
+	return 0;
 }
