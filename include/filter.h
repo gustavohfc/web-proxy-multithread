@@ -20,6 +20,7 @@ private:
 	void readWhiteList(std::vector<std::string> &whitelist);
 	void readBlackList(std::vector<std::string> &blacklist);
 	void readDenyTerms(std::vector<std::string> &deny_terms);
+	int Filter::checkInList(vector<string> &list, string &url);
 
 public:
 

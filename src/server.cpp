@@ -20,6 +20,7 @@
 #include "logger_client.h"
 #include "connection.h"
 #include "cache.h"
+#include "filter.h"
 
 /*!
  * \brief Server port to receive new connections.
@@ -323,7 +324,8 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
         return;
     }
 
-    // // TODO: filter.request(connection)
+    //Filter filter;
+    //filter.filteringRequest(connection.client_request);
     // // if (connection.status != OK)
     // // {
     //     // TODO: connection.sendError()
