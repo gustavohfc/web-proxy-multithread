@@ -271,9 +271,9 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
         Filter filter;
         connection.status = filter.filteringRequest(connection.client_request);
         if (connection.status != OK)
-        {
-        //     // TODO: connection.sendError()
-        //     // continue;
+        {   
+            connection.sendError(connection.status);
+            return;
         }
 
         getResponseMessage(connection);
@@ -286,8 +286,8 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
         connection.status = filter.filteringResponse(connection.response);
         if (connection.status != OK)
         {
-        //     // TODO: connection.sendError()
-        //     // continue;
+            connection.sendError(connection.status);
+            return;
         }
 
         connection.response.addHeader("Connection", "close");

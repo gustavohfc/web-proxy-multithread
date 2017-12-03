@@ -33,6 +33,7 @@ public:
     void receiveRequest();
     void receiveServerResponse();
     void sendResponse();
+    void sendError(ConnectionStatus status);
 };
 
 #endif // CONNECTION_H

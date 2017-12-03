@@ -72,7 +72,7 @@ void Filter::readDenyTerms(vector<string> &deny_terms){
 	char str[255];
 
 	infile.open("./files/deny_terms");
-	
+
 
 	 if(!infile) {
     	cout << "Cannot open input file.\n";	
@@ -82,9 +82,10 @@ void Filter::readDenyTerms(vector<string> &deny_terms){
 	while(infile)
 	{
 		infile.getline(str,255);
-		deny_terms.push_back(str);    	
+		deny_terms.push_back(str);   	
 	}
 
+	deny_terms.pop_back();
 	infile.close();
 }
 
@@ -192,8 +193,9 @@ ConnectionStatus Filter::filteringResponse(HTTPMessage response){
 	// Checking deny_terms
 	const vector<char> body = response.getBody();
 	string str(body.begin(),body.end());
-
+	
 	Filter::readDenyTerms(deny_terms); 
+
 	flag_dt = Filter::checkDenyTerms(str,deny_terms);
 
 	if (flag_dt == -1){
