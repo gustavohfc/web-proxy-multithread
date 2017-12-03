@@ -255,8 +255,10 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
 {
     Connection connection(client_socket, client_addr, client_addr_length);
 
-    do
-    {
+    // do
+    // {
+    //     connection.reset();
+
         connection.receiveRequest();
         if (connection.status != OK)
         {
@@ -288,5 +290,5 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
 
         connection.sendResponse();
     
-    } while (connection.status == KEEP_ALIVE);
+    // } while (connection.status == KEEP_ALIVE);
 }

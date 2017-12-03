@@ -29,6 +29,7 @@ public:
     Connection(int client_socket, struct sockaddr_in client_addr, socklen_t client_addr_length);
     ~Connection();
 
+    void reset();
     void receiveRequest();
     void receiveServerResponse();
     void sendResponse();

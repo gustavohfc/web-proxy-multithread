@@ -29,19 +29,20 @@ ConnectionStatus HTTPMessage::addMessageData(const char *buffer, int n_bytes)
     body.insert(body.end(), buffer, buffer + n_bytes);
 
     // Read header
+    body.push_back('\0');
     if (!header_complete && strstr(&body[0], "\r\n\r\n") != NULL)
     {
         parseHeaders();
         header_complete = true;
     }
+    body.pop_back();
 
     // Read the body
-    if (header_complete)
+    if (header_complete && !body_complete)
     {
         if (headers.find("Content-Length") == headers.end() || stoi(headers.find("Content-Length")->second) == getBodyLength())
         {
             body_complete = true;
-            return OK;
         }
     }
 
