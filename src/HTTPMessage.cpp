@@ -40,8 +40,32 @@ ConnectionStatus HTTPMessage::addMessageData(const char *buffer, int n_bytes)
     // Read the body
     if (header_complete && !body_complete)
     {
-        if (headers.find("Content-Length") == headers.end() || stoi(headers.find("Content-Length")->second) == getBodyLength())
+        auto header_Content_Length = headers.find("Content-Length");
+        auto header_Transfer_Encoding = headers.find("Transfer-Encoding");
+
+        // Check if the message body is defined by the Content-Length or chunks and if it's complete
+        if (header_Content_Length != headers.end())
         {
+            if (stoi(headers.find("Content-Length")->second) <= getBodyLength())
+            {
+                body_complete = true;
+            }
+        }
+        else if (header_Transfer_Encoding != headers.end())
+        {
+            if (body.size() > 4 &&
+                body[ body.size() - 1 ] == '\n' &&
+                body[ body.size() - 2 ] == '\r' &&
+                body[ body.size() - 3 ] == '\n' &&
+                body[ body.size() - 4 ] == '\r' &&
+                body[ body.size() - 5 ] == '0')
+            {
+                body_complete = true;
+            }
+        }
+        else
+        {
+            // The message doesn't have body
             body_complete = true;
         }
     }
