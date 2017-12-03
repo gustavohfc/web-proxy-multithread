@@ -40,4 +40,8 @@ bin/*
 doc/*
 !doc/.gitkeep
 
+# Cache
+cache/*
+!cache/.gitkeep
+
 Log_proxy.txt
