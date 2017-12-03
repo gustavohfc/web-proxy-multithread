@@ -39,7 +39,7 @@ void getResponseMessage(Connection& connection)
 
     FILE* fp;
     if((fp = fopen(filename.c_str(), "wb")) == NULL) {
-    	printf("*ERRO: Can't open file (%s)\n", filename.c_str());
+    	printf("ERRO: Can't open file (%s)\n", filename.c_str());
     	exit(1);
     }
 

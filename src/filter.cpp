@@ -21,7 +21,7 @@ void Filter::readWhiteList(vector<string> &whitelist){
 	ifstream infile;
 	char str[255];
 
-	infile.open("../files/whitelist");
+	infile.open("./files/whitelist");
 	
 
 	 if(!infile) {
@@ -46,7 +46,7 @@ void Filter::readBlackList(vector<string> &blacklist){
 	ifstream infile;
 	char str[255];
 
-	infile.open("../files/blacklist");
+	infile.open("./files/blacklist");
 	
 
 	 if(!infile) {
@@ -71,7 +71,7 @@ void Filter::readDenyTerms(vector<string> &deny_terms){
 	ifstream infile;
 	char str[255];
 
-	infile.open("../files/deny_terms");
+	infile.open("./files/deny_terms");
 	
 
 	 if(!infile) {

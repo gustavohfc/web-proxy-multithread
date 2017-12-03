@@ -10,7 +10,7 @@
 
 #include "connection.h"
 
-#define CACHE_PATH "../cache"
+#define CACHE_PATH "./cache"
 
 void getResponseMessage(Connection& connection);
 
