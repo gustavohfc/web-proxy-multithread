@@ -26,19 +26,16 @@ void closeLog()
 }
 
 
-// void log(std::string message)
-// {
-//     char timestamp[80];
-//     time_t rawtime;
-//     struct tm * timeinfo;
+void log(std::string message)
+{
+    char timestamp[80];
+    time_t rawtime;
+    struct tm * timeinfo;
 
-//     time (&rawtime);
-//     timeinfo = localtime (&rawtime);
+    time (&rawtime);
+    timeinfo = localtime (&rawtime);
 
-//     strftime (timestamp, sizeof(timestamp), "[%X %x]",timeinfo);
+    strftime (timestamp, sizeof(timestamp), "[%X %x]",timeinfo);
 
-//     message.insert(0, " Process " + std::to_string(process_number) + ": ");
-//     message.insert(0, timestamp);
-//     message.append("\n");
-//     send_buffer(logger_socket, (unsigned char *) message.c_str(), message.size());
-// }
+    log_file << timestamp << "  " << message << std::endl;
+}

@@ -9,8 +9,7 @@
 #include <string>
 #include <string.h>
 
-#include "logger_client.h"
-#include "logger_server.h"
+
 #include "HTTPMessage.h"
 #include "connection.h"
 

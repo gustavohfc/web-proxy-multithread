@@ -40,4 +40,4 @@ bin/*
 doc/*
 !doc/.gitkeep
 
-log.txt
+Log_proxy.txt

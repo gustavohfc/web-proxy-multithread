@@ -8,5 +8,6 @@
 
 bool startLog();
 void closeLog();
+void log(std::string message);
 
 #endif // LOG_H

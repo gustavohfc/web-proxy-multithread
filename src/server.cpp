@@ -16,8 +16,7 @@
 #include <csignal>
 #include <iostream>
 
-#include "logger_server.h"
-#include "logger_client.h"
+#include "log.h"
 #include "connection.h"
 #include "cache.h"
 #include "filter.h"
