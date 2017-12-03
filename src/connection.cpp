@@ -92,3 +92,48 @@ void Connection::sendResponse()
         status = KEEP_ALIVE;
     }
 }
+
+
+void Connection::sendError(ConnectionStatus status)
+{   
+    std::string message;
+
+    log("Encaminhamento nao autorizado");
+
+
+    // INVALID_TERM
+    if (status == 6)
+    {   
+        message = "HTTP/1.1 400 Bad Request\r\n"
+                  "Connection: close\r\n"
+                  "Content-type: text/html\r\n"
+                  "\r\n"
+                  "<html>\r\n"
+                  "<head>\r\n"
+                  "<title> ERROR </title>\r\n"
+                  "</head>\r\n"
+                  "<body>\r\n"
+                  "<h1> INVALID TERM FOUND </h1>\r\n"
+                  "</body>\r\n"
+                 "</html>\r\n\r\n";
+    }
+    // URL_BLOCKED
+    else if (status == 4) 
+    {  
+        message = "HTTP/1.1 400 Bad Request\r\n"
+                  "Connection: close\r\n"
+                  "Content-type: text/html\r\n"
+                  "\r\n"
+                  "<html>\r\n"
+                  "<head>\r\n"
+                  "<title> ERROR </title>\r\n"
+                  "</head>\r\n"
+                  "<body>\r\n"
+                  "<h1> URL BLOCKED </h1>\r\n"
+                  "</body>\r\n"
+                  "</html>\r\n\r\n";
+    }
+    
+
+    send_buffer(client_socket, (unsigned char *) &message[0], message.size());
+}
