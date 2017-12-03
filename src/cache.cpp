@@ -5,16 +5,16 @@
 #define BUFFER_SIZE 10000
 
 	// load cache folder?
-	Cache::Cache() {}
-	Cache::~Cache() {}
+	// Cache::Cache() {}
+	// Cache::~Cache() {}
 	
-	bool Cache::find(size_t key) {
-		for (unsigned i = 0; i < cache.size(); ++i) 
-			if(cache[i].key == key) return true;
+	// bool Cache::find(size_t key) {
+	// 	for (unsigned i = 0; i < cache.size(); ++i) 
+	// 		if(cache[i].key == key) return true;
 		
-		return false;
-	}
-	void Cache::set(size_t key, HTTPMessage data) {}
+	// 	return false;
+	// }
+	// void Cache::set(size_t key, HTTPMessage data) {}
 	// HTTPMessage Cache::get(size_t key) {}
 
 void getResponseMessage(Connection& connection)
@@ -67,7 +67,7 @@ void getResponseMessage(Connection& connection)
 			connection.status = FAIL_CONNECT_CACHE;
 			return;
 		}
-		std::cout << head_request << std::endl << head_request.size();
+		// std::cout << head_request << std::endl << head_request.size();
     	send_buffer(verify_socket, (unsigned char *) &head_request[0], head_request.size());
 
     	HTTPMessage response = HTTPMessage(RESPONSE);
@@ -75,42 +75,43 @@ void getResponseMessage(Connection& connection)
     	log("[Cache] Recebendo resposta HEAD do servidor");
 
     	receiveMessage(verify_socket, response, status);
-    	if(status != OK) {
-			log("[Cache] Falha ao receber resposta do servidor");
-			return;
-		}
+    	if(status == OK) {
+    		// check valid: if up to date
+    		if((response.getHeaders().find("Last-Modified")->second != connection.response.getHeaders().find("Last-Modified")->second)
+    			|| (response.getHeaders().find("Date")->second != connection.response.getHeaders().find("Date")->second)) {
+    			log("[Cache] Cache up-to-date");
 
-		// check valid: if up to date
-		if(response.getHeaders().find("Last-Modified")->second != 
-			connection.response.getHeaders().find("Last-Modified")->second) {
-			log("[Cache] Cache up-to-date");
-			return;
+    			fclose(fp);
+    			return;
+    		}
 		}
+		else
+			log("[Cache] Falha ao receber resposta HEAD do servidor, requisição não suportada");
+		
     }
-    else {
-	    // Request message from external server
-	    connection.server_socket = connectToHost(connection.client_request.getHost(), connection.status);
 
-	    std::vector<char> message = connection.client_request.getMessage();
-	    send_buffer(connection.server_socket, (unsigned char *) &message[0], message.size());
+    // Request message from external server
+    connection.server_socket = connectToHost(connection.client_request.getHost(), connection.status);
 
-	    connection.receiveServerResponse();
+    std::vector<char> message = connection.client_request.getMessage();
+    send_buffer(connection.server_socket, (unsigned char *) &message[0], message.size());
 
-	    log("[Cache] Salvando resposta do servidor");
+    connection.receiveServerResponse();
 
-	    // TODO: save new cache
-	    // calculate hash and save for other requests
-	    // connection.response é onde a mensagem sera retornada de acordo com a funçao "receiveMessage" em "server.cpp"
-	    // usar o HTTPMessage.path como endereço completo
+    // TODO: save new cache
+    // calculate hash and save for other requests
+    // connection.response é onde a mensagem sera retornada de acordo com a funçao "receiveMessage" em "server.cpp"
+    // usar o HTTPMessage.path como endereço completo
 
-	    // FILE* fp;
-	    if((fp = fopen(filename.c_str(), "wb")) == NULL) {
-	    	printf("*ERRO: Can't open/create file cache \"%s\"\n", filename.c_str());
-	    	exit(1);
-	    }
+    log("[Cache] Salvando resposta do servidor");
 
-	    data = connection.response.getMessage();
-	    fwrite(&data[0], sizeof(char), data.size(), fp);
-	}
+    if((fp = fopen(filename.c_str(), "wb")) == NULL) {
+    	printf("*ERRO: Can't open/create file cache \"%s\"\n", filename.c_str());
+    	exit(1);
+    }
+
+    data = connection.response.getMessage();
+    fwrite(&data[0], sizeof(char), data.size(), fp);
+
 	fclose(fp);
 }
