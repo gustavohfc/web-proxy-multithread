@@ -8,22 +8,10 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <algorithm>
+#include <iterator>
 
 #include "HTTPMessage.h"
-
-HTTPMessage::HTTPMessage(const std::string method, const std::string& path, const std::string& version, 
-                         const std::map<std::string, std::string>& headers, char *body)
-    : header_complete(true), body_complete(true), type(REQUEST), path(path), method(method), version(version), headers(headers)
-{
-}
-
-
-HTTPMessage::HTTPMessage(const int status_code, const std::string& status_phrase, const std::string& version, 
-                         const std::map<std::string, std::string>& headers, char *body)
-    : header_complete(true), body_complete(true), type(RESPONSE), status_code(status_code), status_phrase(status_phrase), version(version), headers(headers)
-{
-}
-
 
 HTTPMessage::HTTPMessage(HTTPMessageType type)
     : header_complete(false), body_complete(false), type(type)
@@ -73,7 +61,7 @@ void HTTPMessage::parseHeaders()
 
         // Read status code field
         const char* second_space = strchr(first_space + 1, ' ');
-        status_code = stoi( std::string(first_space + 1, second_space - first_space - 1) );
+        status_code = std::string(first_space + 1, second_space - first_space - 1);
 
         // Read status phrase  field
         const char* line_end = strchr(second_space + 1, '\r');
@@ -121,9 +109,60 @@ void HTTPMessage::parseHeaders()
 
 const std::vector<char> HTTPMessage::getMessage() const
 {
-    // TODO: mount message
-    // return &message[0];
-    return std::vector<char>();
+    std::vector<char> message;
+
+    if (type == RESPONSE)
+    {
+        // Write the version field
+        std::copy(version.begin(), version.end(), std::back_inserter(message));
+        message.push_back(' ');
+
+        // Write the status code field
+        std::copy(status_code.begin(), status_code.end(), std::back_inserter(message));
+        message.push_back(' ');
+
+        // Write the status phrase field
+        std::copy(status_phrase.begin(), status_phrase.end(), std::back_inserter(message));
+        message.push_back('\r');
+        message.push_back('\n');
+    }
+    else
+    {
+        // Write the method field
+        std::copy(method.begin(), method.end(), std::back_inserter(message));
+        message.push_back(' ');
+
+        // Write the path field
+        std::copy(path.begin(), path.end(), std::back_inserter(message));
+        message.push_back(' ');
+
+        // Write the version field
+        std::copy(version.begin(), version.end(), std::back_inserter(message));
+        message.push_back('\r');
+        message.push_back('\n');
+    }
+
+    // Write all headers
+    for (auto const & header : headers)
+    {
+        std::copy(header.first.begin(), header.first.end(), std::back_inserter(message));
+
+        message.push_back(':');
+        message.push_back(' ');
+
+        std::copy(header.second.begin(), header.second.end(), std::back_inserter(message));
+
+        message.push_back('\r');
+        message.push_back('\n');
+    }
+
+    // Write the message body
+    message.push_back('\r');
+    message.push_back('\n');
+
+    std::copy(body.begin(), body.end(), std::back_inserter(message));
+
+    return message;
 }
 
 
