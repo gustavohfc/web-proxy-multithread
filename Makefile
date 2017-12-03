@@ -15,7 +15,7 @@ RM = rm -rf
 
 all: $(EXE)
 
-$(EXE): $(OBJECTS)
+$(EXE): $(OBJECTS) 
 	@echo "Linking and generating executable ("$@")"
 	@$(CXX) $(CPPFLAGS) $(OBJECTS) -o $@
 
