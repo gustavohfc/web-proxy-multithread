@@ -98,12 +98,11 @@ void Connection::sendError(ConnectionStatus status)
 {   
     std::string message;
 
-    log("Encaminhamento nao autorizado");
 
-
-    // INVALID_TERM
-    if (status == 6)
+    if (status == INVALID_TERM)
     {   
+        log("Encaminhamento nao autorizado devido a termo invalido encontrado na mensagem HTTP.");
+
         message = "HTTP/1.1 400 Bad Request\r\n"
                   "Connection: close\r\n"
                   "Content-type: text/html\r\n"
@@ -117,9 +116,10 @@ void Connection::sendError(ConnectionStatus status)
                   "</body>\r\n"
                  "</html>\r\n\r\n";
     }
-    // URL_BLOCKED
-    else if (status == 4) 
+    else if (status == URL_BLOCKED) 
     {  
+        log("Encaminhamento nao autorizado devido a URL bloqueada.");
+
         message = "HTTP/1.1 400 Bad Request\r\n"
                   "Connection: close\r\n"
                   "Content-type: text/html\r\n"

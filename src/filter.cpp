@@ -165,7 +165,7 @@ ConnectionStatus Filter::filteringRequest(HTTPMessage clientRequest){
 		
 		// Url is in black list
 		cout << "URL BLOCKED\n\n";
-		return FILTER_BLOCKED;
+		return URL_BLOCKED;
 	}
 
 	// Checking deny_terms
