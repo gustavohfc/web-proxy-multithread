@@ -32,7 +32,7 @@ private:
     std::string version;
 
     std::map<std::string, std::string> headers;
-    std::vector<char> message;
+    std::vector<char> body;
 
 public:
     // Request constructors
@@ -49,9 +49,8 @@ public:
 
     ConnectionStatus addMessageData(const char *buffer, int n_bytes);
     void parseHeaders();
-    const char * getMessage() const;
-    int getMessageLength() const;
-    const char * getBody() const;
+    const std::vector<char> getMessage() const;
+    const std::vector<char> & getBody() const;
     int getBodyLength() const;
     std::string getHost() const;
 

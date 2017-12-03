@@ -38,10 +38,10 @@ HTTPMessage::~HTTPMessage()
 
 ConnectionStatus HTTPMessage::addMessageData(const char *buffer, int n_bytes)
 {
-    message.insert(message.end(), buffer, buffer + n_bytes);
+    body.insert(body.end(), buffer, buffer + n_bytes);
 
     // Read header
-    if (!header_complete && strstr(&message[0], "\r\n\r\n") != NULL)
+    if (!header_complete && strstr(&body[0], "\r\n\r\n") != NULL)
     {
         parseHeaders();
         header_complete = true;
@@ -68,8 +68,8 @@ void HTTPMessage::parseHeaders()
     if (type == RESPONSE)
     {
         // Read version field
-        const char* first_space = strchr(&message[0], ' ');
-        version = std::string(&message[0], first_space - &message[0]);
+        const char* first_space = strchr(&body[0], ' ');
+        version = std::string(&body[0], first_space - &body[0]);
 
         // Read status code field
         const char* second_space = strchr(first_space + 1, ' ');
@@ -84,8 +84,8 @@ void HTTPMessage::parseHeaders()
     else
     {
         // Read method field
-        const char* first_space = strchr(&message[0], ' ');
-        method = std::string(&message[0], first_space - &message[0]);
+        const char* first_space = strchr(&body[0], ' ');
+        method = std::string(&body[0], first_space - &body[0]);
 
         // Read path field
         const char* second_space = strchr(first_space + 1, ' ');
@@ -112,30 +112,30 @@ void HTTPMessage::parseHeaders()
 
         next_line = line_end + 2;
     }
+
+    // Remove the header from the message body
+    uint body_offset = strstr(&body[0], "\r\n\r\n") - &body[0] + 4;
+    body.erase(body.begin(), body.begin() + body_offset);
 }
 
 
-const char * HTTPMessage::getMessage() const
+const std::vector<char> HTTPMessage::getMessage() const
 {
-    return &message[0];
+    // TODO: mount message
+    // return &message[0];
+    return std::vector<char>();
 }
 
 
-int HTTPMessage::getMessageLength() const
+const std::vector<char> & HTTPMessage::getBody() const
 {
-    return message.size();
-}
-
-
-const char * HTTPMessage::getBody() const
-{
-    return strstr(&message[0], "\r\n\r\n") + 3;
+    return body;
 }
 
 
 int HTTPMessage::getBodyLength() const
 {
-    return message.size() - (strstr(&message[0], "\r\n\r\n") - &message[0] + 4);
+    return body.size();
 }
 
 

@@ -57,7 +57,7 @@ void Connection::receiveServerResponse()
 {
     response = HTTPMessage(RESPONSE);
 
-    log("Enviando resposta para o cliente");
+    log("Recebendo resposta do servidor");
 
     receiveMessage(server_socket, response, status);
 }
@@ -65,7 +65,11 @@ void Connection::receiveServerResponse()
 
 void Connection::sendResponse()
 {
-    send_buffer(client_socket, (unsigned char *) response.getMessage(), response.getMessageLength());
+    log("Enviando resposta para o cliente");
+
+    std::vector<char> message = response.getMessage();
+
+    send_buffer(client_socket, (unsigned char *) &message[0], message.size());
 
     auto header_Connection = response.getHeaders().find("Connection");
     if (header_Connection != response.getHeaders().end() && header_Connection->second.compare("keep-alive"))

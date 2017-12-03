@@ -9,7 +9,10 @@ void getResponseMessage(Connection& connection)
 
     // Request message from external server
     connection.server_socket = connectToHost(connection.client_request.getHost(), connection.status);
-    send_buffer(connection.server_socket, (unsigned char *) connection.client_request.getMessage(), connection.client_request.getMessageLength());
+
+    std::vector<char> message = connection.client_request.getMessage();
+    send_buffer(connection.server_socket, (unsigned char *) &message[0], message.size());
+
     connection.receiveServerResponse();
 
     // TODO: unlock file

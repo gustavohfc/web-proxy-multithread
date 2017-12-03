@@ -201,7 +201,6 @@ int connectToHost(const std::string& host, ConnectionStatus& status)
 
 void receiveMessage(int socket, HTTPMessage& message, ConnectionStatus& status)
 {
-    std::string header_buffer;
     char *buffer = new char[BUFFER_SIZE];
 
     do
@@ -222,8 +221,6 @@ void receiveMessage(int socket, HTTPMessage& message, ConnectionStatus& status)
             status = INVALID_REQUEST;
             break;
         }
-
-        buffer[n_bytes] = '\0';
 
         status = message.addMessageData(buffer, n_bytes);
         if (status != OK)
