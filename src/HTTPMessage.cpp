@@ -196,3 +196,10 @@ std::string HTTPMessage::getHost() const
 
     return "";
 }
+
+
+void HTTPMessage::addHeader(std::string header_name, std::string value)
+{
+    headers[header_name] = value;
+}
+

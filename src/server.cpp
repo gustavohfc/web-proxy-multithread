@@ -37,7 +37,7 @@ static const int LISTEN_BACKLOG_SIZE = 20;
 static bool SIGINT_received = false;
 
 
-#define BUFFER_SIZE 256
+#define BUFFER_SIZE 10000
 
 
 // Functions prototype
@@ -265,6 +265,8 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
             // TODO: connection.sendError()
             return;
         }
+        connection.client_request.addHeader("Connection", "close");
+
 
         Filter filter;
         connection.status = filter.filteringRequest(connection.client_request);
@@ -288,7 +290,8 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
         //     // continue;
         }
 
+        connection.response.addHeader("Connection", "close");
         connection.sendResponse();
-    
+
     // } while (connection.status == KEEP_ALIVE);
 }
