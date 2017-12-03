@@ -21,6 +21,7 @@ private:
 	void readBlackList(std::vector<std::string> &blacklist);
 	void readDenyTerms(std::vector<std::string> &deny_terms);
 	int checkInList(std::vector<std::string> &list, std::string &url);
+	int checkDenyTerms(std::string body, std::vector<std::string> &deny_terms);
 
 public:
 

@@ -32,7 +32,7 @@ void getResponseMessage(Connection& connection)
 
     std::stringstream ss;
     std::string filename;
-    std::hash<std::string> hasher;
+    std::hash<std::string> hasher; 
 
     ss << CACHE_PATH << "/" << hasher(connection.client_request.getPath());
     ss >> filename;

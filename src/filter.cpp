@@ -21,7 +21,7 @@ void Filter::readWhiteList(vector<string> &whitelist){
 	ifstream infile;
 	char str[255];
 
-	infile.open("/home/andre/Documents/UnB/TR2/TrabFinal/web-proxy/files/whitelist");
+	infile.open("../files/whitelist");
 	
 
 	 if(!infile) {
@@ -46,7 +46,7 @@ void Filter::readBlackList(vector<string> &blacklist){
 	ifstream infile;
 	char str[255];
 
-	infile.open("/home/andre/Documents/UnB/TR2/TrabFinal/web-proxy/files/blacklist");
+	infile.open("../files/blacklist");
 	
 
 	 if(!infile) {
@@ -71,7 +71,7 @@ void Filter::readDenyTerms(vector<string> &deny_terms){
 	ifstream infile;
 	char str[255];
 
-	infile.open("/home/andre/Documents/UnB/TR2/TrabFinal/web-proxy/files/deny_terms");
+	infile.open("../files/deny_terms");
 	
 
 	 if(!infile) {
@@ -110,13 +110,35 @@ int Filter::checkInList(vector<string> &list, string &url){
 } 
 
 
+// Checking if string has terms in deny_term list
+int Filter::checkDenyTerms(string body, vector<string> &deny_terms){
+
+	std::size_t i = 0;
+
+
+	if(body.size() != 0){
+
+		for (i = 0; i < deny_terms.size(); i++){
+
+			if(body.find(deny_terms[i]) != std::string::npos){
+				
+				cout << "INVALID TERM FOUND\n\n";
+				return -1;
+			}
+
+		}
+	}
+
+	return 1;
+}
+
+
 // Filtering request message
 ConnectionStatus Filter::filteringRequest(HTTPMessage clientRequest){
 
-
 	vector<string> whitelist, blacklist, deny_terms;
 	string url;
-	int flag_wl = 0, flag_bl = 0;
+	int flag_wl = 0, flag_bl = 0, flag_dt = 0;
 
 
 	Filter::readWhiteList(whitelist);
@@ -131,24 +153,31 @@ ConnectionStatus Filter::filteringRequest(HTTPMessage clientRequest){
 	if (flag_wl == 1){
 		
 		// Url is in white list
+		cout << "URL OK\n\n";
 		return OK;
 	}
 
 	// Checking blacklist
-	if (flag_wl == 0){
-
-		flag_bl = Filter::checkInList(blacklist,url);	
-	}
+	flag_bl = Filter::checkInList(blacklist,url);	
 
 	if (flag_bl == 1){
 		
 		// Url is in black list
+		cout << "URL BLOCKED\n\n";
 		return FILTER_BLOCKED;
 	}
 
-
 	// Checking deny_terms
-	//......
+	const vector<char> body = clientRequest.getBody();
+	string str(body.begin(),body.end());
+	
+	flag_dt = Filter::checkDenyTerms(str,deny_terms);
+
+	if (flag_dt == -1){
+
+		return INVALID_TERM;
+	}
+
 	return OK;
 
 }
@@ -157,7 +186,21 @@ ConnectionStatus Filter::filteringRequest(HTTPMessage clientRequest){
 // Filtering response message
 ConnectionStatus Filter::filteringResponse(HTTPMessage response){
 
-	//Deny_terms
+	vector<string> deny_terms;
+	int flag_dt = 0;
+
+	// Checking deny_terms
+	const vector<char> body = response.getBody();
+	string str(body.begin(),body.end());
+
+	Filter::readDenyTerms(deny_terms); 
+	flag_dt = Filter::checkDenyTerms(str,deny_terms);
+
+	if (flag_dt == -1){
+
+		return INVALID_TERM;
+	}
 
 	return OK;
+
 }
