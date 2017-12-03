@@ -258,34 +258,38 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
 {
     Connection connection(client_socket, client_addr, client_addr_length);
 
-    connection.receiveRequest();
-    if (connection.status != OK)
+    do
     {
-        // TODO: connection.sendError()
-        return;
-    }
+        connection.receiveRequest();
+        if (connection.status != OK)
+        {
+            // TODO: connection.sendError()
+            return;
+        }
 
-    Filter filter;
-    connection.status = filter.filteringRequest(connection.client_request);
-    if (connection.status != OK)
-    {
-    //     // TODO: connection.sendError()
-    //     // continue;
-    }
+        Filter filter;
+        connection.status = filter.filteringRequest(connection.client_request);
+        if (connection.status != OK)
+        {
+        //     // TODO: connection.sendError()
+        //     // continue;
+        }
 
-    getResponseMessage(connection);
-    if (connection.status != OK)
-    {
-    //     // TODO: connection.sendError()
-        return;
-    }
+        getResponseMessage(connection);
+        if (connection.status != OK)
+        {
+        //     // TODO: connection.sendError()
+            return;
+        }
 
-    connection.status = filter.filteringResponse(connection.response);
-    if (connection.status != OK)
-    {
-    //     // TODO: connection.sendError()
-    //     // continue;
-    }
+        connection.status = filter.filteringResponse(connection.response);
+        if (connection.status != OK)
+        {
+        //     // TODO: connection.sendError()
+        //     // continue;
+        }
 
-    connection.sendResponse();
+        connection.sendResponse();
+    
+    } while (connection.status == KEEP_ALIVE);
 }
