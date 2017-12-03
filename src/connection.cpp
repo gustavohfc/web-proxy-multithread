@@ -129,6 +129,7 @@ void Connection::sendError(ConnectionStatus status)
                   "<title> ERROR </title>\r\n"
                   "</head>\r\n"
                   "<body>\r\n"
+                  "<img src=\"https://media.giphy.com/media/njYrp176NQsHS/giphy.gif\" alt=\"gif\">"
                   "<h1> URL BLOCKED </h1>\r\n"
                   "</body>\r\n"
                   "</html>\r\n\r\n";
