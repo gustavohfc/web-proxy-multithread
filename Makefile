@@ -2,6 +2,7 @@ SRC_DIR = src
 INC_DIR = ./include
 OBJ_DIR = obj
 DOC_DIR = doc
+CACHE_DIR = ./cache
 
 SOURCES  = $(wildcard $(SRC_DIR)/*.cpp)
 INCLUDES = $(wildcard $(INC_DIR)/*.h)
@@ -27,7 +28,7 @@ docs:
 	doxygen Doxyfile
 
 .PHONY: clean
-clean: clean_obj clean_bin
+clean: clean_obj clean_bin clean_cache
 
 .PHONY: clean_doc
 clean_doc:
@@ -40,3 +41,7 @@ clean_obj:
 .PHONY: clean_bin
 clean_bin:
 	rm -rf $(EXE)
+
+.PHONY: clean_cache
+clean_cache:
+	rm -rf $(CACHE_DIR)/*
