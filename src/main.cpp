@@ -3,13 +3,23 @@
  * \author Gustavo Henrique Fernandes Carvalho
  */
 
+#include <iostream>
+#include <stdlib.h>
+
+#include "log.h"
 #include "server.h"
 
 int main(int argc, char **argv)
 {
-    // TODO: Talvez receber o numero da porta e a pasta do cache como argumento
+    if(!startLog())
+    {
+        std::cout << "Não foi possivel abrir o arquivo de log" << std::endl;
+        exit(EXIT_FAILURE);
+    }
 
     runProxyServer();
+
+    closeLog();
 
     return 0;
 }

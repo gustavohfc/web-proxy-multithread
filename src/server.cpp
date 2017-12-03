@@ -43,8 +43,6 @@ static bool SIGINT_received = false;
 
 // Functions prototype
 static int initializeServerSocket(struct sockaddr_in& serv_addr);
-static void HandleSignalParent(int signum);
-static void setParentSigaction();
 static void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t client_addr_length);
 
 
@@ -55,34 +53,6 @@ void runProxyServer()
 {
     int server_socket;
     struct sockaddr_in serv_addr;
-    uint process_number = 0, process_count = 1;
-
-    // Run a proxy server on a new process
-    runLoggerServer();
-
-    setParentSigaction();
-
-    // Try to connect to the logger server, it try a few times because it may take a while to the
-    // server start to accept connections
-    bool connectedToLogger;
-    for (int n_try = 0; n_try < 5; n_try++)
-    {
-        connectedToLogger = connectToLogger(process_number);
-
-        if (connectedToLogger)
-        {
-            break;
-        }
-        else
-        {
-            usleep(500000);
-        }
-    }
-
-    if (!connectedToLogger)
-    {
-        exit(EXIT_FAILURE);
-    }
 
     // Create a socket to accept requests
     server_socket = initializeServerSocket(serv_addr);
@@ -99,39 +69,16 @@ void runProxyServer()
             continue;
         }
 
-        pid_t pid = fork();
-        if (pid == -1)
-        {
-            close(client_socket);
-            continue;
-        }
-        else if(pid == 0)
-        {
-            process_number = process_count;
-            connectToLogger(process_number);
-            // setParentSigaction();
-
-            handleRequest(client_socket, client_addr, client_addr_length);
-
-            disconnectFromLogger();
-            exit(EXIT_SUCCESS);
-        }
-        else
-        {
-            process_count++;
-        }
-
-        // Clear zombie process
-        while(waitpid(-1, NULL, WNOHANG) > 0);
-
+        handleRequest(client_socket, client_addr, client_addr_length);
     }
 
-    // close(logger_socket);
-
-    // Wait all child process
-    waitpid(-1, NULL, 0);
-
     close(server_socket);
+}
+
+
+void HandleSignalParent(int signum)
+{
+    SIGINT_received = true;
 }
 
 
@@ -146,12 +93,6 @@ void setParentSigaction()
     sa.sa_flags = 0;
     sigemptyset(&sa.sa_mask);
     sigaction(SIGINT, &sa, NULL);
-}
-
-
-void HandleSignalParent(int signum)
-{
-    SIGINT_received = true;
 }
 
 
@@ -312,6 +253,7 @@ int send_buffer(int socketfd, const unsigned char *buffer, const uint n_bytes)
 
     return 0;
 }
+
 
 void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t client_addr_length)
 {
