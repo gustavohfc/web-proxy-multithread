@@ -86,25 +86,27 @@ void getResponseMessage(Connection& connection)
     		else if(response.getStatusCode() == "200") {	// modified ok
     			log("[Cache] Requisição GET CONDITIONAL retornou atualização");
     			// TODO: reaproveitar a resposta do get e retornar a pagina
+    			connection.response = response;
     		}
     	}
     	else
 			log("[Cache] Falha na requisição GET CONDITIONAL ao servidor");
 		
     }
+    else {
 
-    // Request message from external server
-    connection.server_socket = connectToHost(connection.client_request.getHost(), connection.status);
+	    // Request message from external server
+	    connection.server_socket = connectToHost(connection.client_request.getHost(), connection.status);
 
-    std::vector<char> message = connection.client_request.getMessage();
-    send_buffer(connection.server_socket, (unsigned char *) &message[0], message.size());
+	    std::vector<char> message = connection.client_request.getMessage();
+	    send_buffer(connection.server_socket, (unsigned char *) &message[0], message.size());
 
-    connection.receiveServerResponse();
-
-    // TODO: save new cache
-    // calculate hash and save for other requests
-    // connection.response é onde a mensagem sera retornada de acordo com a funçao "receiveMessage" em "server.cpp"
-    // usar o HTTPMessage.path como endereço completo
+	    connection.receiveServerResponse();
+	}
+	    // TODO: save new cache
+	    // calculate hash and save for other requests
+	    // connection.response é onde a mensagem sera retornada de acordo com a funçao "receiveMessage" em "server.cpp"
+	    // usar o HTTPMessage.path como endereço completo
 
     log("[Cache] Salvando resposta do servidor");
 
@@ -115,6 +117,6 @@ void getResponseMessage(Connection& connection)
 
     data = connection.response.getMessage();
     fwrite(&data[0], sizeof(char), data.size(), fp);
-
+	
 	fclose(fp);
 }
