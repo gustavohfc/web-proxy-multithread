@@ -23,6 +23,12 @@ $(OBJECTS): $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp
 	@echo "Compiling "$<" to "$@""
 	@$(CXX) $(CPPFLAGS) -c $< -o $@ -lncurses
 
+run:
+	./bin/proxy
+
+run_inspecao:
+	./bin/proxy -i
+
 .PHONY: docs
 docs:
 	doxygen Doxyfile

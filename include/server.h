@@ -9,7 +9,7 @@
 #include <string>
 #include "HTTPMessage.h"
 
-void runProxyServer();
+void runProxyServer(bool enable_gui);
 int connectToHost(const std::string& host, ConnectionStatus& status);
 int send_buffer(int socketfd, const unsigned char *buffer, const uint n_bytes);
 void receiveMessage(int socket, HTTPMessage& message, ConnectionStatus& status);

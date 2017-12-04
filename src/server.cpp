@@ -43,13 +43,13 @@ static bool SIGINT_received = false;
 
 // Functions prototype
 static int initializeServerSocket(struct sockaddr_in& serv_addr);
-static void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t client_addr_length);
+static void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t client_addr_length, bool enable_gui);
 
 
 /*!
  * \brief Initiates and runs the proxy server until receive a SIGINT.
  */
-void runProxyServer()
+void runProxyServer(bool enable_gui)
 {
     int server_socket;
     struct sockaddr_in serv_addr;
@@ -69,7 +69,7 @@ void runProxyServer()
             continue;
         }
 
-        handleRequest(client_socket, client_addr, client_addr_length);
+        handleRequest(client_socket, client_addr, client_addr_length, enable_gui);
     }
 
     close(server_socket);
@@ -252,11 +252,10 @@ int send_buffer(int socketfd, const unsigned char *buffer, const uint n_bytes)
 } 
 
 
-void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t client_addr_length)
+void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t client_addr_length, bool enable_gui)
 {
     static Filter filter;
     static UI ui;
-    int enableUI = 0;       //Para habilitar ou nao UI
     Connection connection(client_socket, client_addr, client_addr_length);
 
 
@@ -267,7 +266,7 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
         return;
     } 
 
-    if(enableUI == 0)
+    if(enable_gui)
     {   
         ui.handleConnection(&connection);
         if (connection.status != OK)
