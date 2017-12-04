@@ -44,7 +44,7 @@ public:
     const std::vector<char> & getBody() const;
     int getBodyLength() const;
     std::string getHost() const;
-    void addHeader(std::string header_name, std::string value);
+    void changeHeader(std::string header_name, std::string value);
 
     const bool is_message_complete() const { return header_complete && body_complete; };
     const std::string& getMethod() const { return method; };

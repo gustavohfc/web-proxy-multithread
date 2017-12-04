@@ -9,6 +9,7 @@
 #include <string>
 #include <array>
 #include <sstream>
+#include <unistd.h>
 
 #include "connection.h"
 #include "log.h"

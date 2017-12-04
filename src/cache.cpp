@@ -90,8 +90,12 @@ void getResponseMessage(Connection& connection)
     		}
     	}
     	else
+		{
 			log("[Cache] Falha na requisição GET CONDITIONAL ao servidor");
+			connection.status = FAIL_CONNECT_CACHE;
+		}
 		
+		close(verify_socket);
     }
     else {
 
