@@ -63,6 +63,11 @@ ConnectionStatus HTTPMessage::addMessageData(const char *buffer, int n_bytes)
                 body_complete = true;
             }
         }
+        // Check if it's a 304 response, that has Content-Length but no body
+        else if (type == RESPONSE && status_code.compare("304") == 0)
+        {
+            body_complete = true;
+        }
         else
         {
             // The message doesn't have body
