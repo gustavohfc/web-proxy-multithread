@@ -137,7 +137,7 @@ void HTTPMessage::parseHeaders()
 }
 
 
-const std::vector<char> HTTPMessage::getMessage() const
+std::vector<char> HTTPMessage::getMessage() const
 {
     std::vector<char> message;
 
