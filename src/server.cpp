@@ -216,7 +216,7 @@ void receiveMessage(int socket, HTTPMessage& message, ConnectionStatus& status)
         }
         else if (n_bytes == 0)
         {
-            log("Connection close before receiving the whole message.");
+            log("Conexao fechada antes de receber a mensagem.");
             // TODO: Call logger
             status = INVALID_REQUEST;
             break;
@@ -255,43 +255,37 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
 {
     Connection connection(client_socket, client_addr, client_addr_length);
 
-    // do
-    // {
-    //     connection.reset();
 
-        connection.receiveRequest();
-        if (connection.status != OK)
-        {
-            // TODO: connection.sendError()
-            return;
-        }
-        connection.client_request.addHeader("Connection", "close");
+    connection.receiveRequest();
+    if (connection.status != OK)
+    {
+        // TODO: connection.sendError()
+        return;
+    }
 
+    Filter filter;
+    connection.status = filter.filteringRequest(connection.client_request);
+    if (connection.status != OK)
+    {   
+        connection.sendError(connection.status);
+        return;
+    }
 
-        Filter filter;
-        connection.status = filter.filteringRequest(connection.client_request);
-        if (connection.status != OK)
-        {   
-            connection.sendError(connection.status);
-            return;
-        }
+    connection.client_request.addHeader("Connection", "close");
+    getResponseMessage(connection);
+    if (connection.status != OK)
+    {
+    //     // TODO: connection.sendError()
+        return;
+    }
 
-        getResponseMessage(connection);
-        if (connection.status != OK)
-        {
-        //     // TODO: connection.sendError()
-            return;
-        }
+    connection.status = filter.filteringResponse(connection.response);
+    if (connection.status != OK)
+    {
+        connection.sendError(connection.status);
+        return;
+    }
 
-        connection.status = filter.filteringResponse(connection.response);
-        if (connection.status != OK)
-        {
-            connection.sendError(connection.status);
-            return;
-        }
-
-        connection.response.addHeader("Connection", "close");
-        connection.sendResponse();
-
-    // } while (connection.status == KEEP_ALIVE);
+    connection.response.addHeader("Connection", "close");
+    connection.sendResponse();
 }

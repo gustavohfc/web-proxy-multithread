@@ -39,3 +39,9 @@ void log(std::string message)
 
     log_file << timestamp << "  " << message << std::endl;
 }
+
+
+void log_raw(std::string message)
+{
+    log_file << message << std::endl;
+}
