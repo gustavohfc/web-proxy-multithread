@@ -13,9 +13,13 @@
 #include "HTTPMessage.h"
 #include "connection.h"
 
+#include <vector>
+#include <string>
+
 class Filter
 {
 private:
+	std::vector<std::string> whitelist, blacklist, deny_terms;
 
 	void readWhiteList(std::vector<std::string> &whitelist);
 	void readBlackList(std::vector<std::string> &blacklist);
@@ -25,8 +29,9 @@ private:
 
 public:
 
+	Filter();
 	ConnectionStatus filteringRequest(HTTPMessage clientRequest);
-	ConnectionStatus filteringResponse(HTTPMessage response);
+	ConnectionStatus filteringResponse(HTTPMessage response, std::string url);
 
 };
 

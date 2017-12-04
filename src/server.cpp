@@ -253,6 +253,7 @@ int send_buffer(int socketfd, const unsigned char *buffer, const uint n_bytes)
 
 void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t client_addr_length)
 {
+    static Filter filter;
     Connection connection(client_socket, client_addr, client_addr_length);
 
 
@@ -263,7 +264,6 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
         return;
     }
 
-    Filter filter;
     connection.status = filter.filteringRequest(connection.client_request);
     if (connection.status != OK)
     {   
@@ -279,7 +279,7 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
         return;
     }
 
-    connection.status = filter.filteringResponse(connection.response);
+    connection.status = filter.filteringResponse(connection.response, connection.client_request.getHost());
     if (connection.status != OK)
     {
         connection.sendError(connection.status);

@@ -10,8 +10,16 @@
 
 #include "filter.h"
 #include "server.h"
+#include "log.h"
 
 using namespace std;
+
+Filter::Filter()
+{
+	Filter::readWhiteList(whitelist);
+	Filter::readBlackList(blacklist);
+	Filter::readDenyTerms(deny_terms);
+}
 
 
 // Reading whitelist file and saving it in a vector<string>
@@ -24,8 +32,9 @@ void Filter::readWhiteList(vector<string> &whitelist){
 	infile.open("./files/whitelist");
 	
 
-	 if(!infile) {
-    	cout << "Cannot open input file.\n";	
+	if(!infile) 
+	{
+		log("Cannot open whitelist file.");	
   	}
 
   	//Reading file
@@ -49,8 +58,9 @@ void Filter::readBlackList(vector<string> &blacklist){
 	infile.open("./files/blacklist");
 	
 
-	 if(!infile) {
-    	cout << "Cannot open input file.\n";	
+	if(!infile)
+	{
+		log("Cannot open blacklist file.");	
   	}
 
   	//Reading file
@@ -74,8 +84,9 @@ void Filter::readDenyTerms(vector<string> &deny_terms){
 	infile.open("./files/deny_terms");
 
 
-	 if(!infile) {
-    	cout << "Cannot open input file.\n";	
+	if(!infile)
+	{
+    	log("Cannot open deny_terms file.");
   	}
 
   	//Reading file
@@ -98,10 +109,10 @@ int Filter::checkInList(vector<string> &list, string &url){
 	std::size_t i = 0;
 
 
-	for (i = 0; i < list.size(); i++){
-
-		if(strcmp(list[i].c_str(), url.c_str()) == 0){
-			
+	for (i = 0; i < list.size(); i++)
+	{
+		if(strcmp(list[i].c_str(), url.c_str()) == 0)
+		{
 			flag = 1;
 		}
 
@@ -121,9 +132,9 @@ int Filter::checkDenyTerms(string body, vector<string> &deny_terms){
 
 		for (i = 0; i < deny_terms.size(); i++){
 
-			if(body.find(deny_terms[i]) != std::string::npos){
-				
-				cout << "INVALID TERM FOUND\n\n";
+			if(body.find(deny_terms[i]) != std::string::npos)
+			{
+				log("Termo proibido encontrado ( " + deny_terms[i] + " ).");
 				return -1;
 			}
 
@@ -135,36 +146,30 @@ int Filter::checkDenyTerms(string body, vector<string> &deny_terms){
 
 
 // Filtering request message
-ConnectionStatus Filter::filteringRequest(HTTPMessage clientRequest){
-
-	vector<string> whitelist, blacklist, deny_terms;
+ConnectionStatus Filter::filteringRequest(HTTPMessage clientRequest)
+{
 	string url;
-	int flag_wl = 0, flag_bl = 0, flag_dt = 0;
-
-
-	Filter::readWhiteList(whitelist);
-	Filter::readBlackList(blacklist);
-	Filter::readDenyTerms(deny_terms); 
+	int flag_wl = 0, flag_bl = 0, flag_dt = 0; 
 
 	url = clientRequest.getHost();
 
 	// Checking whitelist
 	flag_wl = Filter::checkInList(whitelist,url);
 
-	if (flag_wl == 1){
-		
+	if (flag_wl == 1)
+	{
 		// Url is in white list
-		cout << "URL OK\n\n";
+		log("URL na whitelist ( " + url + " ), requisicao autorizada.");
 		return OK;
 	}
 
 	// Checking blacklist
 	flag_bl = Filter::checkInList(blacklist,url);	
 
-	if (flag_bl == 1){
-		
+	if (flag_bl == 1)
+	{
 		// Url is in black list
-		cout << "URL BLOCKED\n\n";
+		log("URL na black list ( " + url + " ), requisicao bloqueada.");
 		return URL_BLOCKED;
 	}
 
@@ -174,8 +179,8 @@ ConnectionStatus Filter::filteringRequest(HTTPMessage clientRequest){
 	
 	flag_dt = Filter::checkDenyTerms(str,deny_terms);
 
-	if (flag_dt == -1){
-
+	if (flag_dt == -1)
+	{
 		return INVALID_TERM;
 	}
 
@@ -185,10 +190,20 @@ ConnectionStatus Filter::filteringRequest(HTTPMessage clientRequest){
 
 
 // Filtering response message
-ConnectionStatus Filter::filteringResponse(HTTPMessage response){
-
+ConnectionStatus Filter::filteringResponse(HTTPMessage response, std::string url)
+{
 	vector<string> deny_terms;
-	int flag_dt = 0;
+	int flag_wl = 0, flag_dt = 0;
+
+	// Checking whitelist
+	flag_wl = Filter::checkInList(whitelist, url);
+
+	if (flag_wl == 1)
+	{
+		// Url is in white list
+		log("URL na whitelist ( " + url + " ), resposta autorizada.");
+		return OK;
+	}
 
 	// Checking deny_terms
 	const vector<char> body = response.getBody();
@@ -198,8 +213,8 @@ ConnectionStatus Filter::filteringResponse(HTTPMessage response){
 
 	flag_dt = Filter::checkDenyTerms(str,deny_terms);
 
-	if (flag_dt == -1){
-
+	if (flag_dt == -1)
+	{
 		return INVALID_TERM;
 	}
 
