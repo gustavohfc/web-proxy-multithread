@@ -1,9 +1,12 @@
 #ifndef UI_H
 #define UI_H
 
+#include "connection.h"
+
 #include <ncurses.h>
 #include <string>
 #include <vector>
+
 
 #define cima      259
 #define baixo     258
@@ -20,8 +23,9 @@ private:
 	
 public:
 
-	void showUI(std::vector<char> &messageHttp);
-	void editMessage();
+	void handleConnection(Connection *connection);
+	int showUI(HTTPMessage *message);
+	void editMessage(std::string &newField, std::string &fieldContent);
 	void sendMessage();
 	void blockMessage();
 

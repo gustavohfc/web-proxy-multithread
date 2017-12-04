@@ -249,14 +249,14 @@ int send_buffer(int socketfd, const unsigned char *buffer, const uint n_bytes)
     }
 
     return 0;
-}
+} 
 
 
 void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t client_addr_length)
 {
     static Filter filter;
     static UI ui;
-    int enableUI = 1;       //Para habilitar ou nao UI
+    int enableUI = 0;       //Para habilitar ou nao UI
     Connection connection(client_socket, client_addr, client_addr_length);
 
 
@@ -268,9 +268,13 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
     } 
 
     if(enableUI == 0)
-    {
-        std::vector<char> message = connection.client_request.getMessage();
-        ui.showUI(message);
+    {   
+        ui.handleConnection(&connection);
+        if (connection.status != OK)
+        {   
+            connection.sendError(connection.status);
+            return;
+        }
     }
     
     connection.status = filter.filteringRequest(connection.client_request);

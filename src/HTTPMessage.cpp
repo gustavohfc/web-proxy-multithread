@@ -228,7 +228,7 @@ std::string HTTPMessage::getHost() const
 
 
 void HTTPMessage::changeHeader(std::string header_name, std::string value)
-{
+{   
     headers[header_name] = value;
 }
 

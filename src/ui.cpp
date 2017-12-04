@@ -1,4 +1,6 @@
 #include "ui.h"
+#include <iostream>
+
 
 void UI::cores(int opcao)
 {
@@ -7,9 +9,8 @@ void UI::cores(int opcao)
 }
 
 
-void UI::editMessage()
+void UI::editMessage(std::string &newField, std::string &fieldContent)
 {	
-	/* Limpando a tela */
 	clear();
 
 	move(4,1);
@@ -18,71 +19,21 @@ void UI::editMessage()
 	printw(" \tSERVIDOR PROXY \n");
 	printw(" ---------------------------\n");
 	
-	//int opcao = 0, tecla;
+	curs_set(0);
 
 
-	/* Oculta o cursor na tela */
-//	curs_set(0);
+	printw("Nome do campo: ");
+	scanw("%s",newField);
 
 
-	// /* Selecionar a opcao de alteracao de campo */
-	// do{
-		
+	printw("\n\n");
+	printw("Conteudo do campo: ");
+	scanw("%s",fieldContent);
 
-	
-	// 	move(5,0);
+	endwin();
 
-	// 	(opcao == 0) ? printw(" >") : printw("  ");
-	// 	printw("Alterar Nome \n");
-	// 	(opcao == 1) ? printw(" >") : printw("  ");
-	// 	printw("Alterar Senha \n");
-	// 	(opcao == 2) ? printw(" >") : printw("  ");
-	// 	printw("Alterar Email \n");
-	// 	(opcao == 3) ? printw(" >") : printw("  ");
-	// 	printw("Alterar Idade \n");
-	
-	// 	tecla = getch();
-
-	// 	if(tecla == baixo)
-	// 		(opcao == 3) ? opcao = 0: opcao++;
-	// 	if(tecla == cima)
-	// 		(opcao == 0) ? opcao = 3: opcao--;
-		
-	// 	clear();
-
-	// } while(tecla != enter);
-
-	// /*Mostra caracteres na tela e o curor*/
-	// curs_set(1);
-	// echo();
-
-	// /* Alterando o campo desejado */
-	// switch (opcao) {
-
-	// 	case 0:	/* nome */
-
-	// 		printw("\n\n\nDigite o novo nome: \n");
-			
-	// 		break;
-
-	// 	case 1: /* senha */
-
-	// 		noecho();
-	// 		printw("\n\n\nDigite o novo senha: \n");
-			
-	// 		break;
-
-	// 	case 2: /* email */
-
-	// 		printw("\n\n\nDigite o novo email: \n");
-
-	// 		break;
-
-	// 	case 3: /* idade */
-
-	// 		break;
-	// }
 }
+
 
 void UI::sendMessage()
 {
@@ -101,6 +52,7 @@ void UI::sendMessage()
 	endwin();
 }
 
+
 void UI::blockMessage()
 {
 	clear();
@@ -118,26 +70,27 @@ void UI::blockMessage()
 	endwin();
 }
 
-void UI::showUI(std::vector<char> &messageHttp)
+
+int UI::showUI(HTTPMessage *message/*std::vector<char> &messageHttp*/)
 {
 	clear();
 
 	int opcao = 0;
 	int tecla;
+	std::vector<char> messageHttp;
+	std::string newField, fieldContent;
 
-	//Inicializa a biblioteca
+
+	messageHttp = message->getMessage();
+
 	initscr();  
 
-	//Comando que habilita pegar teclas do teclado
 	keypad(stdscr, true); 
 	
-	//Oculta o cursor na tela
 	curs_set(0);
 
-	//Inicializa o uso das cores
 	start_color();
 
-	//Pares de cor que usaremos, texto verde e fundo branco
 	init_pair(1,COLOR_GREEN,COLOR_WHITE);
 	init_pair(2,COLOR_BLUE,COLOR_BLACK);
 	init_pair(3,COLOR_YELLOW,COLOR_RED);
@@ -189,20 +142,62 @@ void UI::showUI(std::vector<char> &messageHttp)
 	switch(opcao)
 	{
 		case 0:
+		
 			UI::sendMessage();
+			return 1;
+		
 			break;
 		case 1:
+
 			UI::blockMessage();
+			return -1;
+		
 			break;
 		case 2:
-			UI::editMessage();
+		
+			UI::editMessage(newField,fieldContent);
+			std::cout << newField.size() << "\n";
+			message->changeHeader(newField,fieldContent);
+			
+			messageHttp = message->getMessage();
+
+			for(i=0; i < messageHttp.size(); i++){
+			
+			if(messageHttp[i] != '\r'){
+
+				std::cout << messageHttp[i];	
+			}
+			
+			}
+
+			return 0;
+		
 			break;	
 		default:
+
 			cores(1);
+		
 			break; 
 	}
 
-	clear();
-	noecho();
+	return 0;
+}
+
+
+void UI::handleConnection(Connection *connection)
+{
+	//std::vector<char> message;
+	int flag = 0;
+
+	while(flag == 0)
+	{
+		//message = connection->client_request.getMessage();
+    	flag = UI::showUI(&connection->client_request);
+	}
+
+	if(flag == -1)
+	{
+		connection->status = URL_BLOCKED;
+	}
 
 }
