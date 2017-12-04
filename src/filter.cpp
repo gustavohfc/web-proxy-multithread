@@ -34,7 +34,7 @@ void Filter::readWhiteList(vector<string> &whitelist){
 
 	if(!infile) 
 	{
-		log("Cannot open whitelist file.");	
+		log("[Filter] Cannot open whitelist file.");	
   	}
 
   	//Reading file
@@ -60,7 +60,7 @@ void Filter::readBlackList(vector<string> &blacklist){
 
 	if(!infile)
 	{
-		log("Cannot open blacklist file.");	
+		log("[Filter] Cannot open blacklist file.");	
   	}
 
   	//Reading file
@@ -86,7 +86,7 @@ void Filter::readDenyTerms(vector<string> &deny_terms){
 
 	if(!infile)
 	{
-    	log("Cannot open deny_terms file.");
+    	log("[Filter] Cannot open deny_terms file.");
   	}
 
   	//Reading file
@@ -134,7 +134,7 @@ int Filter::checkDenyTerms(string body, vector<string> &deny_terms){
 
 			if(body.find(deny_terms[i]) != std::string::npos)
 			{
-				log("Termo proibido encontrado ( " + deny_terms[i] + " ).");
+				log("[Filter] Termo proibido encontrado ( " + deny_terms[i] + " ).");
 				return -1;
 			}
 
@@ -159,7 +159,7 @@ ConnectionStatus Filter::filteringRequest(HTTPMessage clientRequest)
 	if (flag_wl == 1)
 	{
 		// Url is in white list
-		log("URL na whitelist ( " + url + " ), requisicao autorizada.");
+		log("[Filter] URL na whitelist ( " + url + " ), requisicao autorizada.");
 		return OK;
 	}
 
@@ -169,7 +169,7 @@ ConnectionStatus Filter::filteringRequest(HTTPMessage clientRequest)
 	if (flag_bl == 1)
 	{
 		// Url is in black list
-		log("URL na black list ( " + url + " ), requisicao bloqueada.");
+		log("[Filter] URL na black list ( " + url + " ), requisicao bloqueada.");
 		return URL_BLOCKED;
 	}
 
@@ -201,7 +201,7 @@ ConnectionStatus Filter::filteringResponse(HTTPMessage response, std::string url
 	if (flag_wl == 1)
 	{
 		// Url is in white list
-		log("URL na whitelist ( " + url + " ), resposta autorizada.");
+		log("[Filter] URL na whitelist ( " + url + " ), resposta autorizada.");
 		return OK;
 	}
 
