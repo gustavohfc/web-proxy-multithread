@@ -20,6 +20,7 @@
 #include "connection.h"
 #include "cache.h"
 #include "filter.h"
+#include "ui.h"
 
 /*!
  * \brief Server port to receive new connections.
@@ -254,6 +255,8 @@ int send_buffer(int socketfd, const unsigned char *buffer, const uint n_bytes)
 void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t client_addr_length)
 {
     static Filter filter;
+    static UI ui;
+    int enableUI = 1;       //Para habilitar ou nao UI
     Connection connection(client_socket, client_addr, client_addr_length);
 
 
@@ -262,8 +265,14 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
     {
         // TODO: connection.sendError()
         return;
-    }
+    } 
 
+    if(enableUI == 0)
+    {
+        std::vector<char> message = connection.client_request.getMessage();
+        ui.showUI(message);
+    }
+    
     connection.status = filter.filteringRequest(connection.client_request);
     if (connection.status != OK)
     {   
