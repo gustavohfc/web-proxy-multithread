@@ -184,8 +184,9 @@ ConnectionStatus Filter::filteringRequest(HTTPMessage clientRequest)
 		return INVALID_TERM;
 	}
 
-	return OK;
+	log("[Filter] Requisicao autorizada ( " + url + " ).");
 
+	return OK;
 }
 
 
@@ -217,6 +218,8 @@ ConnectionStatus Filter::filteringResponse(HTTPMessage response, std::string url
 	{
 		return INVALID_TERM;
 	}
+
+	log("[Filter] Resposta autorizada ( " + url + " ).");
 
 	return OK;
 
