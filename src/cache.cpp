@@ -36,30 +36,14 @@ void getResponseMessage(Connection& connection)
     FILE* fp;
     // search for it
     if((fp = fopen(filename.c_str(), "r")) != NULL) {
-    	// TODO: load cache
     	log("[Cache] Pagina encontrada em cache!");
-
-    	char *buffer = new char[BUFFER_SIZE];
-    	do 
-    	{
-    	    int n_bytes = fread(buffer, sizeof(char), BUFFER_SIZE-1, fp);
-    	    if (connection.response.addMessageData(buffer, n_bytes) != OK)
-    	        break;
-
-    	} while (!connection.response.is_message_complete());
-
-    	delete[] buffer;
 
 		// TODO: verify valid cache
 		// IF cache is valid THEN return cache ELSE request
 
-    	std::string head_request ("HEAD ");
-    	head_request.append(connection.client_request.getPath());
-    	head_request.append("\r\n\r\n");
-    	ConnectionStatus status;
-    	// ss << "HEAD " << connection.client_request.getPath() << "\r\n\r\n";
-    	// ss >> head_request;
-
+    	HTTPMessage response = HTTPMessage(RESPONSE);
+    	ConnectionStatus cache_request_status;
+    	std::string cache_request;
 
 		int verify_socket = connectToHost(connection.client_request.getHost(), connection.status);
 		if(connection.status != OK) {
@@ -67,26 +51,45 @@ void getResponseMessage(Connection& connection)
 			connection.status = FAIL_CONNECT_CACHE;
 			return;
 		}
-		// std::cout << head_request << std::endl << head_request.size();
-    	send_buffer(verify_socket, (unsigned char *) &head_request[0], head_request.size());
 
-    	HTTPMessage response = HTTPMessage(RESPONSE);
+		// load cache
+		char *buffer = new char[BUFFER_SIZE];
+		do 
+		{
+		    int n_bytes = fread(buffer, sizeof(char), BUFFER_SIZE-1, fp);
+		    if (connection.response.addMessageData(buffer, n_bytes) != OK)
+		        break;
 
-    	log("[Cache] Recebendo resposta HEAD do servidor");
+		} while (!connection.response.is_message_complete());
+		delete[] buffer;
 
-    	receiveMessage(verify_socket, response, status);
-    	if(status == OK) {
-    		// check valid: if up to date
-    		if((response.getHeaders().find("Last-Modified")->second != connection.response.getHeaders().find("Last-Modified")->second)
-    			|| (response.getHeaders().find("Date")->second != connection.response.getHeaders().find("Date")->second)) {
+
+		cache_request =  "GET " + connection.client_request.getPath() + " HTTP/1.1\r\n";
+		cache_request += "Host: " + connection.client_request.getHost() + "\r\n";
+		if(connection.response.getHeaders().find("Last-Modified") != connection.response.getHeaders().end())
+			cache_request += "If-Modified-Since: " + connection.response.getHeaders().find("Last-Modified")->second + "\r\n";
+		if(connection.response.getHeaders().find("ETag") != connection.response.getHeaders().end())
+			cache_request += "If-None-Match: " + connection.response.getHeaders().find("ETag")->second + "\r\n";
+		cache_request += "\r\n";
+
+		log("[Cache] Enviando requisição GET CONDITIONAL ao servidor");
+    	send_buffer(verify_socket, (unsigned char *) &cache_request[0], cache_request.size());
+
+    	receiveMessage(verify_socket, response, cache_request_status);
+    	if(cache_request_status == OK) {
+    		if(response.getStatusCode() == "304") {	// Not Modified
     			log("[Cache] Cache up-to-date");
 
     			fclose(fp);
     			return;
     		}
-		}
-		else
-			log("[Cache] Falha ao receber resposta HEAD do servidor, requisição não suportada");
+    		else if(response.getStatusCode() == "200") {	// modified ok
+    			log("[Cache] Requisição GET CONDITIONAL retornou atualização");
+    			// TODO: reaproveitar a resposta do get e retornar a pagina
+    		}
+    	}
+    	else
+			log("[Cache] Falha na requisição GET CONDITIONAL ao servidor");
 		
     }
 
