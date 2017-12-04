@@ -23,7 +23,7 @@ private:
 	
 public:
 
-	void handleConnection(Connection *connection);
+	void handleConnection(Connection *connection, HTTPMessageType t);
 	int showUI(HTTPMessage *message);
 	void editMessage(std::string &newField, std::string &fieldContent);
 	void sendMessage();

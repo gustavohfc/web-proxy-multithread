@@ -268,7 +268,7 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
 
     if(enable_gui)
     {   
-        ui.handleConnection(&connection);
+        ui.handleConnection(&connection, REQUEST);
         if (connection.status != OK)
         {   
             connection.sendError(connection.status);
@@ -289,6 +289,16 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
     {
     //     // TODO: connection.sendError()
         return;
+    }
+
+    if(enable_gui)
+    {   
+        ui.handleConnection(&connection, RESPONSE);
+        if (connection.status != OK)
+        {   
+            connection.sendError(connection.status);
+            return;
+        }
     }
 
     connection.status = filter.filteringResponse(connection.response, connection.client_request.getHost());

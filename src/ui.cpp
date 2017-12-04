@@ -11,6 +11,8 @@ void UI::cores(int opcao)
 
 void UI::editMessage(std::string &newField, std::string &fieldContent)
 {	
+	char buffer[50];
+
 	clear();
 
 	move(4,1);
@@ -23,14 +25,17 @@ void UI::editMessage(std::string &newField, std::string &fieldContent)
 
 
 	printw("Nome do campo: ");
-	scanw("%s",newField);
-
+	scanw("%s",buffer);
+	
+	newField = std::string(buffer);
 
 	printw("\n\n");
 	printw("Conteudo do campo: ");
-	scanw("%s",fieldContent);
+	scanw("%s",buffer);
+	
+	fieldContent = std::string(buffer);
 
-	endwin();
+	//endwin();
 
 }
 
@@ -156,19 +161,9 @@ int UI::showUI(HTTPMessage *message/*std::vector<char> &messageHttp*/)
 		case 2:
 		
 			UI::editMessage(newField,fieldContent);
-			std::cout << newField.size() << "\n";
 			message->changeHeader(newField,fieldContent);
 			
 			messageHttp = message->getMessage();
-
-			for(i=0; i < messageHttp.size(); i++){
-			
-			if(messageHttp[i] != '\r'){
-
-				std::cout << messageHttp[i];	
-			}
-			
-			}
 
 			return 0;
 		
@@ -184,15 +179,21 @@ int UI::showUI(HTTPMessage *message/*std::vector<char> &messageHttp*/)
 }
 
 
-void UI::handleConnection(Connection *connection)
+void UI::handleConnection(Connection *connection, HTTPMessageType t)
 {
-	//std::vector<char> message;
 	int flag = 0;
 
 	while(flag == 0)
 	{
-		//message = connection->client_request.getMessage();
-    	flag = UI::showUI(&connection->client_request);
+		if(t == REQUEST)
+		{
+			flag = UI::showUI(&connection->client_request);
+		}
+		else if(t == RESPONSE)
+		{
+			flag = UI::showUI(&connection->response);
+		}
+    	
 	}
 
 	if(flag == -1)
