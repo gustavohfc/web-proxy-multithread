@@ -198,7 +198,7 @@ void UI::handleConnection(Connection *connection, HTTPMessageType t)
 
 	if(flag == -1)
 	{
-		connection->status = URL_BLOCKED;
+		connection->status = BLOCKED_BY_INSPECTOR;
 	}
 
 }

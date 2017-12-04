@@ -262,16 +262,17 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
     connection.receiveRequest();
     if (connection.status != OK)
     {
-        // TODO: connection.sendError()
+        connection.sendError();
         return;
     } 
+    connection.client_request.changeHeader("Connection", "close");
 
     if(enable_gui)
     {   
         ui.handleConnection(&connection, REQUEST);
         if (connection.status != OK)
         {   
-            connection.sendError(connection.status);
+            connection.sendError();
             return;
         }
     }
@@ -279,24 +280,24 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
     connection.status = filter.filteringRequest(connection.client_request);
     if (connection.status != OK)
     {   
-        connection.sendError(connection.status);
+        connection.sendError();
         return;
     }
 
-    connection.client_request.changeHeader("Connection", "close");
     getResponseMessage(connection);
     if (connection.status != OK)
     {
-    //     // TODO: connection.sendError()
+        connection.sendError();
         return;
     }
+    connection.response.changeHeader("Connection", "close");
 
     if(enable_gui)
-    {   
+    {
         ui.handleConnection(&connection, RESPONSE);
         if (connection.status != OK)
         {   
-            connection.sendError(connection.status);
+            connection.sendError();
             return;
         }
     }
@@ -304,10 +305,9 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
     connection.status = filter.filteringResponse(connection.response, connection.client_request.getHost());
     if (connection.status != OK)
     {
-        connection.sendError(connection.status);
+        connection.sendError();
         return;
     }
 
-    connection.response.changeHeader("Connection", "close");
     connection.sendResponse();
 }

@@ -75,48 +75,65 @@ void Connection::sendResponse()
 }
 
 
-void Connection::sendError(ConnectionStatus status)
+void Connection::sendError()
 {   
-    std::string message;
+    std::string message("HTTP/1.1 400 Bad Request\r\n"
+                        "Connection: close\r\n");
+    std::string body;
 
 
-    if (status == INVALID_TERM)
-    {   
-        log("Encaminhamento nao autorizado devido a termo invalido encontrado na mensagem HTTP.");
+    switch (status)
+    {
+        case INVALID_TERM:
+            log("Encaminhamento nao autorizado devido a termo invalido encontrado na mensagem HTTP.");
+            body =  "<html>\r\n"
+                    "<head>\r\n"
+                    "<title> ERROR </title>\r\n"
+                    "</head>\r\n"
+                    "<body>\r\n"
+                    "<img src=\"https://media.giphy.com/media/njYrp176NQsHS/giphy.gif\" alt=\"gif\">"
+                    "<h1> INVALID TERM FOUND </h1>\r\n"
+                    "</body>\r\n"
+                    "</html>";
+            break;
 
-        message = "HTTP/1.1 400 Bad Request\r\n"
-                  "Connection: close\r\n"
-                  "Content-type: text/html\r\n"
-                  "\r\n"
-                  "<html>\r\n"
-                  "<head>\r\n"
-                  "<title> ERROR </title>\r\n"
-                  "</head>\r\n"
-                  "<body>\r\n"
-                  "<img src=\"https://media.giphy.com/media/njYrp176NQsHS/giphy.gif\" alt=\"gif\">"
-                  "<h1> INVALID TERM FOUND </h1>\r\n"
-                  "</body>\r\n"
-                 "</html>\r\n\r\n";
+        case URL_BLOCKED:
+            log("Encaminhamento nao autorizado devido a URL bloqueada.");
+            body =  "<html>\r\n"
+                    "<head>\r\n"
+                    "<title> ERROR </title>\r\n"
+                    "</head>\r\n"
+                    "<body>\r\n"
+                    "<img src=\"https://media.giphy.com/media/njYrp176NQsHS/giphy.gif\" alt=\"gif\">"
+                    "<h1> URL BLOCKED </h1>\r\n"
+                    "</body>\r\n"
+                    "</html>";
+            break;
+
+        case BLOCKED_BY_INSPECTOR:
+            log("Encaminhamento bloqueado pelo usuario.");
+            body =  "<html>\r\n"
+                    "<head>\r\n"
+                    "<title> ERROR </title>\r\n"
+                    "</head>\r\n"
+                    "<body>\r\n"
+                    "<img src=\"https://media.giphy.com/media/njYrp176NQsHS/giphy.gif\" alt=\"gif\">"
+                    "<h1> BLOCKED BY USER IN THE HTTP INSPECTOR </h1>\r\n"
+                    "</body>\r\n"
+                    "</html>";
+            break;
+
+        default:
+            break;
     }
-    else if (status == URL_BLOCKED) 
-    {  
-        log("Encaminhamento nao autorizado devido a URL bloqueada.");
 
-        message = "HTTP/1.1 400 Bad Request\r\n"
-                  "Connection: close\r\n"
-                  "Content-type: text/html\r\n"
-                  "\r\n"
-                  "<html>\r\n"
-                  "<head>\r\n"
-                  "<title> ERROR </title>\r\n"
-                  "</head>\r\n"
-                  "<body>\r\n"
-                  "<img src=\"https://media.giphy.com/media/njYrp176NQsHS/giphy.gif\" alt=\"gif\">"
-                  "<h1> URL BLOCKED </h1>\r\n"
-                  "</body>\r\n"
-                  "</html>\r\n\r\n";
+    if (body.size() != 0)
+    {
+        message.append("Content-Length: " + std::to_string(body.size()) + "\r\n");
+        message.append("Content-type: text/html\r\n");
     }
-    
+    message.append("\r\n");
+    message.append(body);
 
     send_buffer(client_socket, (unsigned char *) &message[0], message.size());
 }
