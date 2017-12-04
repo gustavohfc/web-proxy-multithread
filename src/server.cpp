@@ -280,7 +280,7 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
         return;
     }
 
-    connection.client_request.addHeader("Connection", "close");
+    connection.client_request.changeHeader("Connection", "close");
     getResponseMessage(connection);
     if (connection.status != OK)
     {
@@ -295,6 +295,6 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
         return;
     }
 
-    connection.response.addHeader("Connection", "close");
+    connection.response.changeHeader("Connection", "close");
     connection.sendResponse();
 }
