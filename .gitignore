@@ -45,3 +45,5 @@ cache/*
 !cache/.gitkeep
 
 Log_proxy.txt
+stdout_log.txt
+stderr_log.txt

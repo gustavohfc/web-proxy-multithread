@@ -6,6 +6,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "log.h"
 #include "server.h"
@@ -24,6 +25,17 @@ int main(int argc, char **argv)
     {
         log("Interface para inspecao de cabecalhos HTTP abilitada.");
         enable_gui = true;
+    }
+    else if (argc > 1 && strcmp("-d", argv[1]) == 0)
+    {
+        log("Rodando o proxy como daemon.");
+
+        // Run as daemon
+        daemon(1, 0);
+
+        // Redirect stdout and stderr to log files
+        freopen("stdout_log.txt", "w", stdout);
+        freopen("stderr_log.txt", "w", stderr);
     }
     else
     {

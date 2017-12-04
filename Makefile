@@ -29,6 +29,9 @@ run:
 run_inspecao:
 	./bin/proxy -i
 
+run_daemon:
+	./bin/proxy -d
+
 .PHONY: docs
 docs:
 	doxygen Doxyfile
