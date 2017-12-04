@@ -8,7 +8,9 @@
 
 static std::ofstream log_file;
 
-
+/*!
+ * \brief Open the log file and save the stream.
+ */
 bool startLog()
 {
     log_file.open("Log_proxy.txt", std::ios::out | std::ios::app | std::ios::binary);
@@ -19,13 +21,18 @@ bool startLog()
         return false;
 }
 
-
+/*!
+ * \brief Close the log file stram.
+ */
 void closeLog()
 {
     log_file.close();
 }
 
 
+/*!
+ * \brief Log a the message adding a timestamp and a new line.
+ */
 void log(std::string message)
 {
     char timestamp[80];
@@ -41,6 +48,9 @@ void log(std::string message)
 }
 
 
+/*!
+ * \brief Log a the message as it is.
+ */
 void log_raw(std::string message)
 {
     log_file << message << std::endl;

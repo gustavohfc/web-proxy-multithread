@@ -21,6 +21,7 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
+    // Check the cmd options
     if (argc > 1 && strcmp("-i", argv[1]) == 0)
     {
         log("Interface para inspecao de cabecalhos HTTP abilitada.");

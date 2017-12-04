@@ -24,6 +24,9 @@ HTTPMessage::~HTTPMessage()
 }
 
 
+/*!
+ * \brief Add n_bytes of the buffer as HTTP data, processing the headers and the body.
+ */
 ConnectionStatus HTTPMessage::addMessageData(const char *buffer, int n_bytes)
 {
     body.insert(body.end(), buffer, buffer + n_bytes);
@@ -53,6 +56,7 @@ ConnectionStatus HTTPMessage::addMessageData(const char *buffer, int n_bytes)
         }
         else if (header_Transfer_Encoding != headers.end())
         {
+            // Handle chuncked encoded messages
             if (body.size() > 4 &&
                 body[ body.size() - 1 ] == '\n' &&
                 body[ body.size() - 2 ] == '\r' &&
@@ -79,6 +83,9 @@ ConnectionStatus HTTPMessage::addMessageData(const char *buffer, int n_bytes)
 }
 
 
+/*!
+ * \brief Remove the header from the body when it's complete and save the headers on a map.
+ */
 void HTTPMessage::parseHeaders()
 {
     const char* next_line;
@@ -137,6 +144,9 @@ void HTTPMessage::parseHeaders()
 }
 
 
+/*!
+ * \brief Build a message with the information on the headers map and body.
+ */
 std::vector<char> HTTPMessage::getMessage() const
 {
     std::vector<char> message;
@@ -196,18 +206,27 @@ std::vector<char> HTTPMessage::getMessage() const
 }
 
 
+/*!
+ * \brief Returns a const reference to the message body.
+ */
 const std::vector<char> & HTTPMessage::getBody() const
 {
     return body;
 }
 
 
+/*!
+ * \brief Returns the size of the message body.
+ */
 int HTTPMessage::getBodyLength() const
 {
     return body.size();
 }
 
 
+/*!
+ * \brief Returns the host destionation of the request.
+ */
 std::string HTTPMessage::getHost() const
 {
     if (headers.find("Host") != headers.end())
@@ -227,6 +246,9 @@ std::string HTTPMessage::getHost() const
 }
 
 
+/*!
+ * \brief Change the value of a header field.
+ */
 void HTTPMessage::changeHeader(std::string header_name, std::string value)
 {   
     headers[header_name] = value;

@@ -44,7 +44,9 @@ Connection::~Connection()
 }
 
 
-
+/*!
+ * \brief Receive the client request.
+ */
 void Connection::receiveRequest()
 {
     client_request = HTTPMessage(REQUEST);
@@ -55,6 +57,9 @@ void Connection::receiveRequest()
 }
 
 
+/*!
+ * \brief Receive the server response, when it's not in the cache yet.
+ */
 void Connection::receiveServerResponse()
 {
     response = HTTPMessage(RESPONSE);
@@ -65,6 +70,9 @@ void Connection::receiveServerResponse()
 }
 
 
+/*!
+ * \brief Send the response to the client.
+ */
 void Connection::sendResponse()
 {
     log("Enviando resposta para o cliente");
@@ -75,6 +83,9 @@ void Connection::sendResponse()
 }
 
 
+/*!
+ * \brief Send a error message to the client.
+ */
 void Connection::sendError()
 {   
     std::string message("HTTP/1.1 400 Bad Request\r\n"

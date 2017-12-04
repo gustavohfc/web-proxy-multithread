@@ -22,7 +22,9 @@ Filter::Filter()
 }
 
 
-// Reading whitelist file and saving it in a vector<string>
+/*!
+ * \brief Reading whitelist file and saving it in a vector<string>.
+ */
 void Filter::readWhiteList(vector<string> &whitelist){
 
 
@@ -48,7 +50,9 @@ void Filter::readWhiteList(vector<string> &whitelist){
 }
 
 
-// Reading blacklist file and saving it in a vector<string>
+/*!
+ * \brief Reading blacklist file and saving it in a vector<string>.
+ */
 void Filter::readBlackList(vector<string> &blacklist){
 
 
@@ -74,7 +78,9 @@ void Filter::readBlackList(vector<string> &blacklist){
 }
 
 
-// Reading deny_terms file and saving it in a vector<string>
+/*!
+ * \brief Reading deny_terms file and saving it in a vector<string>.
+ */
 void Filter::readDenyTerms(vector<string> &deny_terms){
 
 
@@ -101,7 +107,9 @@ void Filter::readDenyTerms(vector<string> &deny_terms){
 }
 
 
-// Checking if list has url
+/*!
+ * \brief Checking if list has url.
+ */
 int Filter::checkInList(vector<string> &list, string &url){
 
 
@@ -122,7 +130,9 @@ int Filter::checkInList(vector<string> &list, string &url){
 } 
 
 
-// Checking if string has terms in deny_term list
+/*!
+ * \brief Checking if string has terms in deny_term list.
+ */
 int Filter::checkDenyTerms(string body, vector<string> &deny_terms){
 
 	std::size_t i = 0;
@@ -145,7 +155,9 @@ int Filter::checkDenyTerms(string body, vector<string> &deny_terms){
 }
 
 
-// Filtering request message
+/*!
+ * \brief Filtering request message.
+ */
 ConnectionStatus Filter::filteringRequest(HTTPMessage clientRequest)
 {
 	string url;
@@ -190,7 +202,9 @@ ConnectionStatus Filter::filteringRequest(HTTPMessage clientRequest)
 }
 
 
-// Filtering response message
+/*!
+ * \brief Filtering response message.
+ */
 ConnectionStatus Filter::filteringResponse(HTTPMessage response, std::string url)
 {
 	vector<string> deny_terms;

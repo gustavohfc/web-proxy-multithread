@@ -76,26 +76,6 @@ void runProxyServer(bool enable_gui)
 }
 
 
-void HandleSignalParent(int signum)
-{
-    SIGINT_received = true;
-}
-
-
-/*!
- * \brief Specifies the action to be associated with a specific signal in the parent process.
- */
-void setParentSigaction()
-{
-    // Register a signal handler to SIGINT
-    struct sigaction sa;
-    sa.sa_handler = HandleSignalParent;
-    sa.sa_flags = 0;
-    sigemptyset(&sa.sa_mask);
-    sigaction(SIGINT, &sa, NULL);
-}
-
-
 /*!
  * \brief Initialize a TCP/IPv4 listener socket and bind it to the port defined by SERVER_PORT.
  * 
@@ -147,6 +127,14 @@ int initializeServerSocket(struct sockaddr_in& serv_addr)
 }
 
 
+/*!
+ * \brief Try to connect to a external server.
+ * 
+ * \param [in] url Url of the external host.
+ * \param [out] status Indicate the result of the connection.
+ * 
+ * \return Socket to communicate with the host.
+ */
 int connectToHost(const std::string& host, ConnectionStatus& status)
 {
     int sockfd;
@@ -200,6 +188,13 @@ int connectToHost(const std::string& host, ConnectionStatus& status)
 }
 
 
+/*!
+ * \brief Receive a HTTP message from the socket.
+ * 
+ * \param [in] socket Source of the message.
+ * \param [out] message Received message.
+ * \param [out] status Indicate the result.
+ */
 void receiveMessage(int socket, HTTPMessage& message, ConnectionStatus& status)
 {
     char *buffer = new char[BUFFER_SIZE];
@@ -233,6 +228,13 @@ void receiveMessage(int socket, HTTPMessage& message, ConnectionStatus& status)
 }
 
 
+/*!
+ * \brief Send a HTTP message to the socket.
+ * 
+ * \param [in] socketfd Destination of the message.
+ * \param [in] buffer Continuous byte array with the message.
+ * \param [in] n_bytes Number of bytes in the buffer.
+ */
 int send_buffer(int socketfd, const unsigned char *buffer, const uint n_bytes)
 {
     uint bytes_sent = 0;
@@ -252,13 +254,23 @@ int send_buffer(int socketfd, const unsigned char *buffer, const uint n_bytes)
 } 
 
 
+/*!
+ * \brief Handles a client request.
+ * 
+ * \param [in] client_socket Socket to communicate with the client.
+ * \param [in] client_addr Informations of the client.
+ * \param [in] client_addr_length Size of client_addr.
+ * \param [in] enable_gui Indicates if the gui option is active.
+ */
 void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t client_addr_length, bool enable_gui)
 {
     static Filter filter;
     static UI ui;
+
+    // Initialize new connection
     Connection connection(client_socket, client_addr, client_addr_length);
 
-
+    // Receive the client request
     connection.receiveRequest();
     if (connection.status != OK)
     {
@@ -267,6 +279,7 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
     } 
     connection.client_request.changeHeader("Connection", "close");
 
+    // Open the inspector if it's enabled
     if(enable_gui)
     {   
         ui.handleConnection(&connection, REQUEST);
@@ -277,6 +290,7 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
         }
     }
     
+    // Filter the request
     connection.status = filter.filteringRequest(connection.client_request);
     if (connection.status != OK)
     {   
@@ -284,6 +298,7 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
         return;
     }
 
+    // Get the response message from the cache or from the external server
     getResponseMessage(connection);
     if (connection.status != OK)
     {
@@ -292,6 +307,7 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
     }
     connection.response.changeHeader("Connection", "close");
 
+    // Open the inspector if it's enabled
     if(enable_gui)
     {
         ui.handleConnection(&connection, RESPONSE);
@@ -302,6 +318,7 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
         }
     }
 
+    // Filter the response
     connection.status = filter.filteringResponse(connection.response, connection.client_request.getHost());
     if (connection.status != OK)
     {
@@ -309,5 +326,6 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
         return;
     }
 
+    // Send the response to the client
     connection.sendResponse();
 }
