@@ -9,7 +9,7 @@ Integrantes do grupo:
 
 Dependências
 ------------
-Este projeto dependende da biblioteca ncurses.h. Para que o programa possa ser executado, essa biblioteca
+Este projeto dependende da biblioteca `ncurses.h`. Para que o programa possa ser executado, essa biblioteca
 precisa estar instalada na máquina.
 
 Instruções de execução
@@ -36,3 +36,8 @@ sistema operacional, digite:
 Para limpar arquivo gerados no build, digite:
 
     $ make clean
+
+Para acompanhar o preenchimento do arquivo `Log_proxy.txt`, gerado pelo logger, execute em um terminal
+separado:
+
+    $ tail -f Log_proxy.txt
