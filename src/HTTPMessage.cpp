@@ -173,7 +173,15 @@ std::vector<char> HTTPMessage::getMessage() const
         message.push_back(' ');
 
         // Write the path field
-        std::copy(path.begin(), path.end(), std::back_inserter(message));
+        if (path.find("http://") != std::string::npos)
+        {
+            std::string real_path = path.substr(path.find("/", sizeof("http://")));
+            std::copy(real_path.begin(), real_path.end(), std::back_inserter(message));
+        }
+        else
+        {
+            std::copy(path.begin(), path.end(), std::back_inserter(message));
+        }
         message.push_back(' ');
 
         // Write the version field
