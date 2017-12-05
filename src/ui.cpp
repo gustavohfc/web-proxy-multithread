@@ -67,7 +67,7 @@ int UI::showUI(HTTPMessage *message/*std::vector<char> &messageHttp*/)
 	start_color();
 
 	init_pair(1,COLOR_GREEN,COLOR_WHITE);
-	init_pair(2,COLOR_BLUE,COLOR_BLACK);
+	init_pair(2,COLOR_WHITE,COLOR_BLACK);
 	init_pair(3,COLOR_YELLOW,COLOR_RED);
 	init_pair(4,COLOR_BLACK,COLOR_GREEN);
 
