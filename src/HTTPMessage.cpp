@@ -213,6 +213,71 @@ std::vector<char> HTTPMessage::getMessage() const
     return message;
 }
 
+/*!
+ * \brief Returns the message's header.
+ */
+std::vector<char> HTTPMessage::getHeader() const
+{
+    std::vector<char> message;
+
+    if (type == RESPONSE)
+    {
+        // Write the version field
+        std::copy(version.begin(), version.end(), std::back_inserter(message));
+        message.push_back(' ');
+
+        // Write the status code field
+        std::copy(status_code.begin(), status_code.end(), std::back_inserter(message));
+        message.push_back(' ');
+
+        // Write the status phrase field
+        std::copy(status_phrase.begin(), status_phrase.end(), std::back_inserter(message));
+        message.push_back('\r');
+        message.push_back('\n');
+    }
+    else
+    {
+        // Write the method field
+        std::copy(method.begin(), method.end(), std::back_inserter(message));
+        message.push_back(' ');
+
+        // Write the path field
+        if (path.find("http://") != std::string::npos)
+        {
+            std::string real_path = path.substr(path.find("/", sizeof("http://")));
+            std::copy(real_path.begin(), real_path.end(), std::back_inserter(message));
+        }
+        else
+        {
+            std::copy(path.begin(), path.end(), std::back_inserter(message));
+        }
+        message.push_back(' ');
+
+        // Write the version field
+        std::copy(version.begin(), version.end(), std::back_inserter(message));
+        message.push_back('\r');
+        message.push_back('\n');
+    }
+
+    // Write all headers
+    for (auto const & header : headers)
+    {
+        std::copy(header.first.begin(), header.first.end(), std::back_inserter(message));
+
+        message.push_back(':');
+        message.push_back(' ');
+
+        std::copy(header.second.begin(), header.second.end(), std::back_inserter(message));
+
+        message.push_back('\r');
+        message.push_back('\n');
+    }
+
+    message.push_back('\r');
+    message.push_back('\n');
+
+    return message;
+}
 
 /*!
  * \brief Returns a const reference to the message body.

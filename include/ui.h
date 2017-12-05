@@ -25,9 +25,7 @@ public:
 
 	void handleConnection(Connection *connection, HTTPMessageType t);
 	int showUI(HTTPMessage *message);
-	void editMessage(std::string &newField, std::string &fieldContent);
-	void sendMessage();
-	void blockMessage();
+	void editMessage(std::string &newField, std::string &fieldContent, std::vector<char> message);
 
 };
 

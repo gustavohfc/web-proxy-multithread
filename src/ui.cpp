@@ -1,15 +1,15 @@
 #include "ui.h"
+#include "log.h"
 #include <iostream>
 
 
 void UI::cores(int opcao)
 {
-
 	bkgd(COLOR_PAIR(opcao));
 }
 
 
-void UI::editMessage(std::string &newField, std::string &fieldContent)
+void UI::editMessage(std::string &newField, std::string &fieldContent, std::vector<char> messageHeader)
 {	
 	char buffer[50];
 
@@ -17,62 +17,32 @@ void UI::editMessage(std::string &newField, std::string &fieldContent)
 
 	move(4,1);
 	move(1,0);
-	printw(" ---------------------------\n");
-	printw(" \tSERVIDOR PROXY \n");
-	printw(" ---------------------------\n");
+	printw("|--------------------------------------------------------------------|\n");
+	printw("|                           SERVIDOR PROXY                           |\n");
+	printw("|--------------------------------------------------------------------|\n");
 	
 	curs_set(0);
 
+	// Mostra cabeçalho original
+	printw("\n ");
+	for (std::size_t i = 0; i < messageHeader.size(); i++) {
+		if (messageHeader[i] == '\r') {
+			continue;
+		}
+		if (messageHeader[i] == '\n') {
+			printw("\n ");
+			continue;
+		}
+		printw("%c", messageHeader[i]);
+	}
 
-	printw("Nome do campo: ");
-	scanw("%s",buffer);
-	
+	printw("\n Escreva o campo que deseja modificar ou criar: ");
+	scanw("%s", buffer);
 	newField = std::string(buffer);
 
-	printw("\n\n");
-	printw("Conteudo do campo: ");
-	scanw("%s",buffer);
-	
+	printw(" Conteudo do campo: ");
+	scanw("%s", buffer);
 	fieldContent = std::string(buffer);
-
-	//endwin();
-
-}
-
-
-void UI::sendMessage()
-{
-	clear();
-	
-	move(4,1);
-	move(1,0);
-	printw(" ---------------------------\n");
-	printw(" \tSERVIDOR PROXY \n");
-	printw(" ---------------------------\n");
-
-	printw(" Mensagem encaminhada.");
-
-	getch();
-
-	endwin();
-}
-
-
-void UI::blockMessage()
-{
-	clear();
-	
-	move(4,1);
-	move(1,0);
-	printw(" ---------------------------\n");
-	printw(" \tSERVIDOR PROXY \n");
-	printw(" ---------------------------\n");
-
-	printw(" Mensagem bloqueada.");
-
-	getch();
-
-	endwin();
 }
 
 
@@ -103,34 +73,34 @@ int UI::showUI(HTTPMessage *message/*std::vector<char> &messageHttp*/)
 
 	cores(2);
 
-	std::size_t i = 0;
-	
-
-	do{
+	do {
 		
 
 		move(4,1);
 		move(1,0);
-		printw(" ---------------------------\n");
-		printw(" \tSERVIDOR PROXY \n");
-		printw(" ---------------------------\n");
+		printw("|--------------------------------------------------------------------|\n");
+		printw("|                           SERVIDOR PROXY                           |\n");
+		printw("|--------------------------------------------------------------------|\n");
 		
-		move(6,0);
-		(opcao == 0) ? printw(" >") : printw("  ");
+		move(5,0);
+		(opcao == 0) ? printw(" > ") : printw("  ");
 		printw("ENVIAR\n");
-		(opcao == 1) ? printw(" >") : printw("  ");
+		(opcao == 1) ? printw(" > ") : printw("  ");
 		printw("BLOQUEAR\n");
-		(opcao ==2 ) ? printw(" >") : printw("  ");
+		(opcao == 2) ? printw(" > ") : printw("  ");
 		printw("ALTERAR CABECALHO\n\n\n");
 
-
-		for(i=0; i < messageHttp.size(); i++){
-			
-			if(messageHttp[i] != '\r'){
-
-				printw("%c",messageHttp[i]);	
+		// Mostra messagem atual
+		printw(" ");
+		for (std::size_t i = 0; i < messageHttp.size(); i++) {
+			if (messageHttp[i] == '\r') {
+				continue;
 			}
-			
+			if (messageHttp[i] == '\n') {
+				printw("\n ");
+				continue;
+			}
+			printw("%c", messageHttp[i]);
 		}
 		
 		tecla = getch();
@@ -147,32 +117,23 @@ int UI::showUI(HTTPMessage *message/*std::vector<char> &messageHttp*/)
 	switch(opcao)
 	{
 		case 0:
-		
-			UI::sendMessage();
+			endwin();
+			log("[Inspecao] Mensagem encaminhada");
 			return 1;
-		
-			break;
+
 		case 1:
-
-			UI::blockMessage();
+			endwin();
+			log("[Inspecao] Mensagem bloqueada");
 			return -1;
-		
-			break;
+
 		case 2:
-		
-			UI::editMessage(newField,fieldContent);
+			UI::editMessage(newField,fieldContent, message->getHeader());
 			message->changeHeader(newField,fieldContent);
-			
 			messageHttp = message->getMessage();
-
 			return 0;
-		
-			break;	
-		default:
 
+		default:
 			cores(1);
-		
-			break; 
 	}
 
 	return 0;

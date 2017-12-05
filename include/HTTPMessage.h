@@ -41,6 +41,7 @@ public:
     ConnectionStatus addMessageData(const char *buffer, int n_bytes);
     void parseHeaders();
     std::vector<char> getMessage() const;
+    std::vector<char> getHeader() const;
     const std::vector<char> & getBody() const;
     int getBodyLength() const;
     std::string getHost() const;
