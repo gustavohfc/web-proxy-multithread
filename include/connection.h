@@ -6,21 +6,19 @@
 #ifndef CONNECTION_H
 #define CONNECTION_H
 
+#include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <netinet/in.h>
 #include <string>
 
 #include "HTTPMessage.h"
 
-class Connection
-{
-private:
+class Connection {
+   private:
     const struct sockaddr_in client_addr;
     const socklen_t client_addr_length;
 
-
-public:
+   public:
     int client_socket, server_socket;
     ConnectionStatus status;
     HTTPMessage client_request;
@@ -35,4 +33,4 @@ public:
     void sendError();
 };
 
-#endif // CONNECTION_H
+#endif  // CONNECTION_H

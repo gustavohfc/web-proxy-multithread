@@ -3,23 +3,23 @@
  * \author Gustavo Henrique Fernandes Carvalho
  */
 
-#include <netdb.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
 #include <arpa/inet.h>
+#include <netdb.h>
+#include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <sys/wait.h>
+#include <unistd.h>
 #include <csignal>
 #include <iostream>
 
-#include "log.h"
-#include "connection.h"
 #include "cache.h"
+#include "connection.h"
 #include "filter.h"
+#include "log.h"
 #include "ui.h"
 
 /*!
@@ -37,34 +37,28 @@ static const int LISTEN_BACKLOG_SIZE = 20;
  */
 static bool SIGINT_received = false;
 
-
 #define BUFFER_SIZE 10000
-
 
 // Functions prototype
 static int initializeServerSocket(struct sockaddr_in& serv_addr);
 static void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t client_addr_length, bool enable_gui);
 
-
 /*!
  * \brief Initiates and runs the proxy server until receive a SIGINT.
  */
-void runProxyServer(bool enable_gui)
-{
+void runProxyServer(bool enable_gui) {
     int server_socket;
     struct sockaddr_in serv_addr;
 
     // Create a socket to accept requests
     server_socket = initializeServerSocket(serv_addr);
 
-    while (!SIGINT_received)
-    {
+    while (!SIGINT_received) {
         struct sockaddr_in client_addr;
         socklen_t client_addr_length = sizeof client_addr;
 
-        int client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &client_addr_length);
-        if (client_socket < 0)
-        {
+        int client_socket = accept(server_socket, (struct sockaddr*)&client_addr, &client_addr_length);
+        if (client_socket < 0) {
             log("Accept() fail");
             continue;
         }
@@ -75,15 +69,13 @@ void runProxyServer(bool enable_gui)
     close(server_socket);
 }
 
-
 /*!
  * \brief Initialize a TCP/IPv4 listener socket and bind it to the port defined by SERVER_PORT.
  * 
  * \param [out] serv_addr Struct filled with the new socket address information.
  * \return File descriptor of the initialized socket.
  */
-int initializeServerSocket(struct sockaddr_in& serv_addr)
-{
+int initializeServerSocket(struct sockaddr_in& serv_addr) {
     memset(&serv_addr, 0, sizeof(struct sockaddr_in));
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(SERVER_PORT);
@@ -92,24 +84,22 @@ int initializeServerSocket(struct sockaddr_in& serv_addr)
 
     // Create a IPv4 TCP socket
     int sockfd = socket(serv_addr.sin_family, SOCK_STREAM, 0);
-    if (sockfd < 0)
-    {
+    if (sockfd < 0) {
         perror("socket");
         // TODO: Call logger
         exit(EXIT_FAILURE);
     }
 
     // Make the socket reusable to make easier to execute the program multiple times
-    int yes=1;
-    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1)
-    {
+    int yes = 1;
+    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
         perror("setsockopt");
         // TODO: Call logger
         exit(EXIT_FAILURE);
     }
 
     // Bind the socket with the port
-    if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) == -1) {
+    if (bind(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == -1) {
         close(sockfd);
         // TODO: Call logger
         perror("bind");
@@ -126,7 +116,6 @@ int initializeServerSocket(struct sockaddr_in& serv_addr)
     return sockfd;
 }
 
-
 /*!
  * \brief Try to connect to a external server.
  * 
@@ -135,33 +124,30 @@ int initializeServerSocket(struct sockaddr_in& serv_addr)
  * 
  * \return Socket to communicate with the host.
  */
-int connectToHost(const std::string& host, ConnectionStatus& status)
-{
+int connectToHost(const std::string& host, ConnectionStatus& status) {
     int sockfd;
     struct addrinfo hints, *servinfo, *p;
     int rv;
 
     memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_UNSPEC; // Use IPv4 or IPv6
-    hints.ai_socktype = SOCK_STREAM; // Use TCP
+    hints.ai_family = AF_UNSPEC;      // Use IPv4 or IPv6
+    hints.ai_socktype = SOCK_STREAM;  // Use TCP
 
     char* host_name = strdup(host.c_str());
     // Remove the port number from the host name
     char* colon_char = strchr(host_name, ':');
-    if (colon_char != NULL)
-    {
+    if (colon_char != NULL) {
         *colon_char = '\0';
     }
 
-    if ((rv = getaddrinfo(host_name, "http", &hints, &servinfo)) != 0)
-    {
+    if ((rv = getaddrinfo(host_name, "http", &hints, &servinfo)) != 0) {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
         status = CANNOT_CONNECT_TO_HOST;
         return -1;
     }
 
     // Loop through all the results and try to connect
-    for(p = servinfo; p != NULL; p = p->ai_next) {
+    for (p = servinfo; p != NULL; p = p->ai_next) {
         if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
             perror("socket");
             continue;
@@ -187,7 +173,6 @@ int connectToHost(const std::string& host, ConnectionStatus& status)
     return sockfd;
 }
 
-
 /*!
  * \brief Receive a HTTP message from the socket.
  * 
@@ -195,23 +180,18 @@ int connectToHost(const std::string& host, ConnectionStatus& status)
  * \param [out] message Received message.
  * \param [out] status Indicate the result.
  */
-void receiveMessage(int socket, HTTPMessage& message, ConnectionStatus& status)
-{
-    char *buffer = new char[BUFFER_SIZE];
+void receiveMessage(int socket, HTTPMessage& message, ConnectionStatus& status) {
+    char* buffer = new char[BUFFER_SIZE];
 
-    do
-    {
+    do {
         // Receive a piece of the message
         int n_bytes = recv(socket, buffer, BUFFER_SIZE - 1, 0);
-        if (n_bytes < 0)
-        {
+        if (n_bytes < 0) {
             perror("recv");
             // TODO: Call logger
             status = INVALID_REQUEST;
             break;
-        }
-        else if (n_bytes == 0)
-        {
+        } else if (n_bytes == 0) {
             log("Conexao fechada antes de receber a mensagem.");
             // TODO: Call logger
             status = INVALID_REQUEST;
@@ -227,7 +207,6 @@ void receiveMessage(int socket, HTTPMessage& message, ConnectionStatus& status)
     delete[] buffer;
 }
 
-
 /*!
  * \brief Send a HTTP message to the socket.
  * 
@@ -235,15 +214,12 @@ void receiveMessage(int socket, HTTPMessage& message, ConnectionStatus& status)
  * \param [in] buffer Continuous byte array with the message.
  * \param [in] n_bytes Number of bytes in the buffer.
  */
-int send_buffer(int socketfd, const unsigned char *buffer, const uint n_bytes)
-{
+int send_buffer(int socketfd, const unsigned char* buffer, const uint n_bytes) {
     uint bytes_sent = 0;
 
-    while (bytes_sent != n_bytes)
-    {
+    while (bytes_sent != n_bytes) {
         int rv = send(socketfd, buffer, n_bytes - bytes_sent, 0);
-        if (rv < 0)
-        {
+        if (rv < 0) {
             return -1;
         }
 
@@ -251,8 +227,7 @@ int send_buffer(int socketfd, const unsigned char *buffer, const uint n_bytes)
     }
 
     return 0;
-} 
-
+}
 
 /*!
  * \brief Handles a client request.
@@ -262,8 +237,7 @@ int send_buffer(int socketfd, const unsigned char *buffer, const uint n_bytes)
  * \param [in] client_addr_length Size of client_addr.
  * \param [in] enable_gui Indicates if the gui option is active.
  */
-void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t client_addr_length, bool enable_gui)
-{
+void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t client_addr_length, bool enable_gui) {
     static Filter filter;
     static UI ui;
 
@@ -272,47 +246,40 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
 
     // Receive the client request
     connection.receiveRequest();
-    if (connection.status != OK)
-    {
+    if (connection.status != OK) {
         connection.sendError();
         return;
-    } 
+    }
     connection.client_request.changeHeader("Connection", "close");
 
     // Open the inspector if it's enabled
-    if(enable_gui)
-    {   
+    if (enable_gui) {
         ui.handleConnection(&connection, REQUEST);
-        if (connection.status != OK)
-        {   
+        if (connection.status != OK) {
             connection.sendError();
             return;
         }
     }
-    
+
     // Filter the request
     connection.status = filter.filteringRequest(connection.client_request);
-    if (connection.status != OK)
-    {   
+    if (connection.status != OK) {
         connection.sendError();
         return;
     }
 
     // Get the response message from the cache or from the external server
     getResponseMessage(connection);
-    if (connection.status != OK)
-    {
+    if (connection.status != OK) {
         connection.sendError();
         return;
     }
     connection.response.changeHeader("Connection", "close");
 
     // Open the inspector if it's enabled
-    if(enable_gui)
-    {
+    if (enable_gui) {
         ui.handleConnection(&connection, RESPONSE);
-        if (connection.status != OK)
-        {   
+        if (connection.status != OK) {
             connection.sendError();
             return;
         }
@@ -320,8 +287,7 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
 
     // Filter the response
     connection.status = filter.filteringResponse(connection.response, connection.client_request.getHost());
-    if (connection.status != OK)
-    {
+    if (connection.status != OK) {
         connection.sendError();
         return;
     }

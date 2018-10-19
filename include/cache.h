@@ -2,19 +2,19 @@
 #ifndef CACHE_H
 #define CACHE_H
 
-#include <iostream>
+#include <unistd.h>
+#include <array>
 #include <cstdio>
 #include <cstdlib>
 #include <functional>
-#include <string>
-#include <array>
+#include <iostream>
 #include <sstream>
-#include <unistd.h>
+#include <string>
 
 #include "connection.h"
 #include "log.h"
 
-#define CACHE_SIZE 1000		// in number of CacheType's
+#define CACHE_SIZE 1000  // in number of CacheType's
 #define CACHE_PATH "./cache"
 
 // typedef struct cache_struct
@@ -31,7 +31,7 @@
 // public:
 // 	Cache();
 // 	~Cache();
-	
+
 // 	bool find(size_t key);
 // 	HTTPMessage get(size_t key);
 // 	void set(size_t key, HTTPMessage data);
@@ -39,4 +39,4 @@
 
 void getResponseMessage(Connection& connection);
 
-#endif // CACHE_H
+#endif  // CACHE_H

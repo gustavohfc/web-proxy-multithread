@@ -7,17 +7,23 @@
 #ifndef HTTP_MESSAGE_H
 #define HTTP_MESSAGE_H
 
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
 
-enum ConnectionStatus {OK, INVALID_REQUEST, URL_BLOCKED, INVALID_TERM, CANNOT_CONNECT_TO_HOST, FAIL_CONNECT_CACHE, BLOCKED_BY_INSPECTOR};
+enum ConnectionStatus { OK,
+                        INVALID_REQUEST,
+                        URL_BLOCKED,
+                        INVALID_TERM,
+                        CANNOT_CONNECT_TO_HOST,
+                        FAIL_CONNECT_CACHE,
+                        BLOCKED_BY_INSPECTOR };
 
-enum HTTPMessageType {REQUEST, RESPONSE};
+enum HTTPMessageType { REQUEST,
+                       RESPONSE };
 
-class HTTPMessage
-{
-private:
+class HTTPMessage {
+   private:
     bool header_complete, body_complete;
     HTTPMessageType type;
 
@@ -34,15 +40,15 @@ private:
     std::map<std::string, std::string> headers;
     std::vector<char> body;
 
-public:
+   public:
     HTTPMessage(HTTPMessageType type);
     ~HTTPMessage();
 
-    ConnectionStatus addMessageData(const char *buffer, int n_bytes);
+    ConnectionStatus addMessageData(const char* buffer, int n_bytes);
     void parseHeaders();
     std::vector<char> getMessage() const;
     std::vector<char> getHeader() const;
-    const std::vector<char> & getBody() const;
+    const std::vector<char>& getBody() const;
     int getBodyLength() const;
     std::string getHost() const;
     void changeHeader(std::string header_name, std::string value);
@@ -56,4 +62,4 @@ public:
     const std::map<std::string, std::string>& getHeaders() const { return headers; };
 };
 
-#endif // HTTP_MESSAGE_H
+#endif  // HTTP_MESSAGE_H

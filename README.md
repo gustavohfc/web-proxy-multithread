@@ -1,16 +1,7 @@
-Projeto Final de TR2
+Projeto de Programação Concorrente
 ====================
 
-Integrantes do grupo:
-1. André Luis Souto Ferreira (14/0016261)
-2. Fabio Trevizolo de Souza (14/0019774)
-3. Gustavo Henrique Fernandes Carvalho (14/0021671)
-4. Ismael Coelho Medeiros (14/0083162)
-
-Dependências
-------------
-Este projeto dependende da biblioteca `ncurses.h`. Para que o programa possa ser executado, essa biblioteca
-precisa estar instalada na máquina.
+    Gustavo Henrique Fernandes Carvalho (14/0021671)
 
 Instruções de execução
 ----------------------

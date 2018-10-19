@@ -11,4 +11,4 @@ void closeLog();
 void log(std::string message);
 void log_raw(std::string message);
 
-#endif // LOG_H
+#endif  // LOG_H
