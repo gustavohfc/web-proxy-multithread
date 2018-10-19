@@ -20,7 +20,6 @@
 #include "connection.h"
 #include "filter.h"
 #include "log.h"
-#include "ui.h"
 
 /*!
  * \brief Server port to receive new connections.
@@ -239,7 +238,7 @@ int send_buffer(int socketfd, const unsigned char* buffer, const uint n_bytes) {
  */
 void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t client_addr_length, bool enable_gui) {
     static Filter filter;
-    static UI ui;
+    // static UI ui;
 
     // Initialize new connection
     Connection connection(client_socket, client_addr, client_addr_length);
@@ -253,13 +252,13 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
     connection.client_request.changeHeader("Connection", "close");
 
     // Open the inspector if it's enabled
-    if (enable_gui) {
-        ui.handleConnection(&connection, REQUEST);
-        if (connection.status != OK) {
-            connection.sendError();
-            return;
-        }
-    }
+    // if (enable_gui) {
+    //     ui.handleConnection(&connection, REQUEST);
+    //     if (connection.status != OK) {
+    //         connection.sendError();
+    //         return;
+    //     }
+    // }
 
     // Filter the request
     connection.status = filter.filteringRequest(connection.client_request);
@@ -277,13 +276,13 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
     connection.response.changeHeader("Connection", "close");
 
     // Open the inspector if it's enabled
-    if (enable_gui) {
-        ui.handleConnection(&connection, RESPONSE);
-        if (connection.status != OK) {
-            connection.sendError();
-            return;
-        }
-    }
+    // if (enable_gui) {
+    //     ui.handleConnection(&connection, RESPONSE);
+    //     if (connection.status != OK) {
+    //         connection.sendError();
+    //         return;
+    //     }
+    // }
 
     // Filter the response
     connection.status = filter.filteringResponse(connection.response, connection.client_request.getHost());

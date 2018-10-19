@@ -17,11 +17,11 @@ all: $(EXE)
 
 $(EXE): $(OBJECTS) 
 	@echo "Linking and generating executable ("$@")"
-	@$(CXX) $(CPPFLAGS) $(OBJECTS) -o $@ -lncurses
+	@$(CXX) $(CPPFLAGS) $(OBJECTS) -o $@
 
 $(OBJECTS): $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp
 	@echo "Compiling "$<" to "$@""
-	@$(CXX) $(CPPFLAGS) -c $< -o $@ -lncurses
+	@$(CXX) $(CPPFLAGS) -c $< -o $@
 
 run:
 	./bin/proxy
