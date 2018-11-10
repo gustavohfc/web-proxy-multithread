@@ -11,9 +11,9 @@
 void Cache::getResponseMessage(Connection &connection) {
     pthread_mutex_lock(&mutex);
 
-    pthread_mutex_lock(&pages[connection.client_request.getPath()].pageReadMutex);
-
-    CachedPage cachedPage = pages[connection.client_request.getPath()];
+    CachedPage& cachedPage = pages[connection.client_request.getPath()];
+    
+    pthread_mutex_lock(&cachedPage.pageReadMutex);
 
     pthread_mutex_unlock(&mutex);
 
@@ -88,7 +88,7 @@ void Cache::getResponseMessage(Connection &connection) {
     pthread_mutex_lock(&mutex);
     pthread_mutex_lock(&cachedPage.pageReadMutex);
     pages[connection.client_request.getPath()] = cachedPage;
-    pthread_mutex_unlock(&pages[connection.client_request.getPath()].pageReadMutex);
+    pthread_mutex_unlock(&cachedPage.pageReadMutex);
     pthread_mutex_unlock(&mutex);
 }
 
