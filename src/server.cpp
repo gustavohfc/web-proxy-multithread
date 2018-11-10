@@ -240,6 +240,7 @@ int send_buffer(int socketfd, const unsigned char* buffer, const uint n_bytes) {
  */
 void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t client_addr_length, bool enable_gui) {
     static Filter filter;
+    static Cache cache;
     // static UI ui;
 
     // Initialize new connection
@@ -274,7 +275,7 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
     }
 
     // Get the response message from the cache or from the external server
-    getResponseMessage(connection);
+    cache.getResponseMessage(connection);
     if (connection.status != OK) {
         connection.sendError();
         return;

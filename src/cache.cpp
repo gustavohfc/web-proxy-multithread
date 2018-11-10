@@ -8,20 +8,11 @@
 
 #define BUFFER_SIZE 10000
 
-void getResponseMessage(Connection &connection) {
-    std::hash<std::string> hasher;
+void Cache::getResponseMessage(Connection &connection) {
     std::stringstream ss;
-    std::string filename;
+    CachedPage cachedPage = pages[connection.client_request.getPath()];
 
-    // GET url from connection
-    // calculate hash
-    size_t url_hash = hasher(connection.client_request.getPath());
-    ss << CACHE_PATH << "/" << url_hash;
-    ss >> filename;
-
-    FILE *fp;
-    // search for it
-    if ((fp = fopen(filename.c_str(), "r")) != NULL) {
+    if (!cachedPage.data.empty()) {
         log("[Cache] Pagina encontrada em cache!");
 
         HTTPMessage response = HTTPMessage(RESPONSE);
@@ -36,15 +27,8 @@ void getResponseMessage(Connection &connection) {
         }
 
         // load cache
-        char *buffer = new char[BUFFER_SIZE];
-        do {
-            int n_bytes = fread(buffer, sizeof(char), BUFFER_SIZE - 1, fp);
-            if (connection.response.addMessageData(buffer, n_bytes) != OK)
-                break;
-
-        } while (!connection.response.is_message_complete());
-        delete[] buffer;
-        fclose(fp);
+        char *buffer = &cachedPage.data[0];
+        connection.response.addMessageData(buffer, cachedPage.data.size());
 
         cache_request = "GET " + connection.client_request.getPath() + " HTTP/1.1\r\n";
         cache_request += "Host: " + connection.client_request.getHost() + "\r\n";
@@ -64,7 +48,7 @@ void getResponseMessage(Connection &connection) {
             } else if (response.getStatusCode() == "200") {  // modified ok
                 log("[Cache] Requisição GET CONDITIONAL retornou atualização");
                 connection.response = response;
-                saveToCache(filename, connection.response.getMessage());
+                saveToCache(cachedPage, connection.response.getMessage());
             } else {
                 // TODO: handle when the server doesn't support "If-Modified-Since: ",
                 // for now the cache is considered to be up-to-date in that case
@@ -85,22 +69,14 @@ void getResponseMessage(Connection &connection) {
 
         connection.receiveServerResponse();
 
-        saveToCache(filename, connection.response.getMessage());
+        saveToCache(cachedPage, connection.response.getMessage());
     }
+
+    pages[connection.client_request.getPath()] = cachedPage;
 }
 
-
-void saveToCache(std::string filename, std::vector<char> data) {
-    FILE *fp;
-
+void Cache::saveToCache(CachedPage &cachedPage, std::vector<char> data) {
     log("[Cache] Salvando resposta do servidor");
 
-    if ((fp = fopen(filename.c_str(), "wb")) == NULL) {
-        printf("*ERRO: Can't open/create file cache \"%s\"\n", filename.c_str());
-        exit(1);
-    }
-
-    fwrite(&data[0], sizeof(char), data.size(), fp);
-
-    fclose(fp);
+    cachedPage.data = data;
 }
