@@ -167,6 +167,7 @@ int connectToHost(const std::string& host, ConnectionStatus& status) {
         return -1;
     }
 
+    free(host_name);
     freeaddrinfo(servinfo);
 
     return sockfd;
