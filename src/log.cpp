@@ -9,6 +9,9 @@
 
 static std::ofstream log_file;
 
+static pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+
 /*!
  * \brief Open the log file and save the stream.
  */
@@ -43,12 +46,7 @@ void log(std::string message) {
 
     strftime(timestamp, sizeof(timestamp), "[%X %x]", timeinfo);
 
+    pthread_mutex_lock(&log_mutex);
     log_file << "[" << pthread_self() << "] " << timestamp << "  " << message << std::endl;
-}
-
-/*!
- * \brief Log a the message as it is.
- */
-void log_raw(std::string message) {
-    log_file << message << std::endl;
+    pthread_mutex_unlock(&log_mutex);
 }

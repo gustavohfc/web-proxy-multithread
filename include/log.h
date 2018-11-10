@@ -3,6 +3,8 @@
  * \author Gustavo Henrique Fernandes Carvalho
  */
 
+#include <pthread.h>
+
 #ifndef LOG_H
 #define LOG_H
 
