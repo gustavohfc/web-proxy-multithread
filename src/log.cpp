@@ -9,7 +9,7 @@
 
 static std::ofstream log_file;
 
-static pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t logMutex = PTHREAD_MUTEX_INITIALIZER;
 
 
 /*!
@@ -46,7 +46,7 @@ void log(std::string message) {
 
     strftime(timestamp, sizeof(timestamp), "[%X %x]", timeinfo);
 
-    pthread_mutex_lock(&log_mutex);
+    pthread_mutex_lock(&logMutex);
     log_file << "[" << pthread_self() << "] " << timestamp << "  " << message << std::endl;
-    pthread_mutex_unlock(&log_mutex);
+    pthread_mutex_unlock(&logMutex);
 }

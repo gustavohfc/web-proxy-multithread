@@ -8,7 +8,7 @@ SOURCES  = $(wildcard $(SRC_DIR)/*.cpp)
 INCLUDES = $(wildcard $(INC_DIR)/*.h)
 OBJECTS  = $(SOURCES:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
-CPPFLAGS = -Wall -Werror -std=c++11 -I$(INC_DIR)
+CPPFLAGS = -Wall -Werror -std=c++11 -I$(INC_DIR) -g
 EXE = bin/proxy
 CXX = g++
 RM = rm -rf
@@ -17,11 +17,11 @@ all: $(EXE)
 
 $(EXE): $(OBJECTS) 
 	@echo "Linking and generating executable ("$@")"
-	@$(CXX) $(CPPFLAGS) $(OBJECTS) -o $@ -lpthread -lrt
+	@$(CXX) $(CPPFLAGS) $(OBJECTS) -o $@ -lpthread -lrt -g
 
 $(OBJECTS): $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp
 	@echo "Compiling "$<" to "$@""
-	@$(CXX) $(CPPFLAGS) -c $< -o $@
+	@$(CXX) $(CPPFLAGS) -c $< -o $@ -g
 
 run:
 	./bin/proxy
