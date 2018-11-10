@@ -1,26 +1,14 @@
+/*!
+ * \file cache.cpp
+ * \author Gustavo Henrique Fernandes Carvalho
+ */
 
 #include "cache.h"
 #include "server.h"
 
 #define BUFFER_SIZE 10000
 
-// load cache folder?
-// Cache::Cache() {}
-// Cache::~Cache() {}
-
-// bool Cache::find(size_t key) {
-// 	for (unsigned i = 0; i < cache.size(); ++i)
-// 		if(cache[i].key == key) return true;
-
-// 	return false;
-// }
-// void Cache::set(size_t key, HTTPMessage data) {}
-// HTTPMessage Cache::get(size_t key) {}
-
 void getResponseMessage(Connection &connection) {
-    // TODO: consult cache
-    // IF found THEN verify ELSE request
-
     std::hash<std::string> hasher;
     std::stringstream ss;
     std::string filename;
@@ -36,9 +24,6 @@ void getResponseMessage(Connection &connection) {
     // search for it
     if ((fp = fopen(filename.c_str(), "r")) != NULL) {
         log("[Cache] Pagina encontrada em cache!");
-
-        // TODO: verify valid cache
-        // IF cache is valid THEN return cache ELSE request
 
         HTTPMessage response = HTTPMessage(RESPONSE);
         ConnectionStatus cache_request_status;
@@ -104,15 +89,17 @@ void getResponseMessage(Connection &connection) {
     // connection.response é onde a mensagem sera retornada de acordo com a funçao "receiveMessage" em "server.cpp"
     // usar o HTTPMessage.path como endereço completo
 
-    log("[Cache] Salvando resposta do servidor");
+    if (connection.status == OK && connection.response.getStatusCode() == "200") {
+        log("[Cache] Salvando resposta do servidor");
 
-    if ((fp = fopen(filename.c_str(), "wb")) == NULL) {
-        printf("*ERRO: Can't open/create file cache \"%s\"\n", filename.c_str());
-        exit(1);
+        if ((fp = fopen(filename.c_str(), "wb")) == NULL) {
+            printf("*ERRO: Can't open/create file cache \"%s\"\n", filename.c_str());
+            exit(1);
+        }
+
+        data = connection.response.getMessage();
+        fwrite(&data[0], sizeof(char), data.size(), fp);
+
+        fclose(fp);
     }
-
-    data = connection.response.getMessage();
-    fwrite(&data[0], sizeof(char), data.size(), fp);
-
-    fclose(fp);
 }

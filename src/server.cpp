@@ -1,5 +1,5 @@
 /*!
- * \file main.cpp
+ * \file server.cpp
  * \author Gustavo Henrique Fernandes Carvalho
  */
 
@@ -185,21 +185,22 @@ void receiveMessage(int socket, HTTPMessage& message, ConnectionStatus& status) 
     do {
         // Receive a piece of the message
         int n_bytes = recv(socket, buffer, BUFFER_SIZE - 1, 0);
-        if (n_bytes < 0) {
-            perror("recv");
-            // TODO: Call logger
+        if (n_bytes == EAGAIN || n_bytes == EWOULDBLOCK) {
+            log("recv timeout.");
             status = INVALID_REQUEST;
-            break;
+        }
+        else if (n_bytes < 0) {
+            perror("recv");
+            status = INVALID_REQUEST;
         } else if (n_bytes == 0) {
             log("Conexao fechada antes de receber a mensagem.");
-            // TODO: Call logger
             status = INVALID_REQUEST;
-            break;
         }
 
-        status = message.addMessageData(buffer, n_bytes);
         if (status != OK)
             break;
+
+        status = message.addMessageData(buffer, n_bytes);
 
     } while (!message.is_message_complete());
 
@@ -241,6 +242,10 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
     // static UI ui;
 
     // Initialize new connection
+    struct timeval tv;
+    tv.tv_sec = 3;
+    tv.tv_usec = 0;
+    setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
     Connection connection(client_socket, client_addr, client_addr_length);
 
     // Receive the client request
@@ -261,7 +266,7 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
     // }
 
     // Filter the request
-    connection.status = filter.filteringRequest(connection.client_request);
+    connection.status = filter.filterRequest(connection.client_request);
     if (connection.status != OK) {
         connection.sendError();
         return;
@@ -285,7 +290,7 @@ void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t 
     // }
 
     // Filter the response
-    connection.status = filter.filteringResponse(connection.response, connection.client_request.getHost());
+    connection.status = filter.filterResponse(connection.response, connection.client_request.getHost());
     if (connection.status != OK) {
         connection.sendError();
         return;

@@ -1,6 +1,7 @@
 /*!
  * \file filter.cpp
  * \author Andre Luis Souto
+ * \author Gustavo Henrique Fernandes Carvalho
  */
 
 #include <stdio.h>
@@ -124,7 +125,7 @@ int Filter::checkDenyTerms(string body, vector<string> &deny_terms) {
 /*!
  * \brief Filtering request message.
  */
-ConnectionStatus Filter::filteringRequest(HTTPMessage clientRequest) {
+ConnectionStatus Filter::filterRequest(HTTPMessage clientRequest) {
     string url;
     int flag_wl = 0, flag_bl = 0, flag_dt = 0;
 
@@ -166,7 +167,7 @@ ConnectionStatus Filter::filteringRequest(HTTPMessage clientRequest) {
 /*!
  * \brief Filtering response message.
  */
-ConnectionStatus Filter::filteringResponse(HTTPMessage response, std::string url) {
+ConnectionStatus Filter::filterResponse(HTTPMessage response, std::string url) {
     vector<string> deny_terms;
     int flag_wl = 0, flag_dt = 0;
 

@@ -27,8 +27,8 @@ class Filter {
 
    public:
     Filter();
-    ConnectionStatus filteringRequest(HTTPMessage clientRequest);
-    ConnectionStatus filteringResponse(HTTPMessage response, std::string url);
+    ConnectionStatus filterRequest(HTTPMessage clientRequest);
+    ConnectionStatus filterResponse(HTTPMessage response, std::string url);
 };
 
 #endif  // FILTER_H
