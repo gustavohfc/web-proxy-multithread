@@ -5,6 +5,7 @@
 
 #include <fstream>
 #include <iostream>
+#include "log.h"
 
 static std::ofstream log_file;
 
@@ -14,10 +15,12 @@ static std::ofstream log_file;
 bool startLog() {
     log_file.open("Log_proxy.txt", std::ios::out | std::ios::app | std::ios::binary);
 
-    if (log_file.is_open())
+    if (log_file.is_open()) {
+        log("\n\n\n---- Starting ----\n\n\n");
         return true;
-    else
+    } else {
         return false;
+    }
 }
 
 /*!
@@ -40,7 +43,7 @@ void log(std::string message) {
 
     strftime(timestamp, sizeof(timestamp), "[%X %x]", timeinfo);
 
-    log_file << timestamp << "  " << message << std::endl;
+    log_file << "[" << pthread_self() << "] " << timestamp << "  " << message << std::endl;
 }
 
 /*!

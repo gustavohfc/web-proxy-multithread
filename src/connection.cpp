@@ -24,7 +24,6 @@
  */
 Connection::Connection(int client_socket, struct sockaddr_in client_addr, socklen_t client_addr_length)
     : client_addr(client_addr), client_addr_length(client_addr_length), client_socket(client_socket), server_socket(-1), status(OK), client_request(REQUEST), response(RESPONSE) {
-    log_raw("\n");
     log("Trantando nova requisicao de " + std::string(inet_ntoa(client_addr.sin_addr)) + ":" + std::to_string(ntohs(client_addr.sin_port)));
 }
 

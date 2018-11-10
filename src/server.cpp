@@ -16,10 +16,15 @@
 #include <csignal>
 #include <iostream>
 
+#include "RequestQueue.h"
 #include "cache.h"
 #include "connection.h"
 #include "filter.h"
 #include "log.h"
+#include "server.h"
+
+#define BUFFER_SIZE 10000
+#define N_THREADS 50
 
 /*!
  * \brief Server port to receive new connections.
@@ -36,18 +41,29 @@ static const int LISTEN_BACKLOG_SIZE = 20;
  */
 static bool SIGINT_received = false;
 
-#define BUFFER_SIZE 10000
+static Filter filter;
 
-// Functions prototype
-static int initializeServerSocket(struct sockaddr_in& serv_addr);
-static void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t client_addr_length, bool enable_gui);
+static Cache cache;
+
+static RequestQueue queue;
 
 /*!
  * \brief Initiates and runs the proxy server until receive a SIGINT.
  */
-void runProxyServer(bool enable_gui) {
+void runProxyServer() {
     int server_socket;
     struct sockaddr_in serv_addr;
+    pthread_t tid[N_THREADS];
+
+    // Initialize threads
+    for (int i = 0; i < N_THREADS; i++) {
+        int erro = pthread_create(&tid[i], NULL, workingThreadHandleRequest, NULL);
+
+        if (erro) {
+            log("pthread_create error %d\n");
+            exit(1);
+        }
+    }
 
     // Create a socket to accept requests
     server_socket = initializeServerSocket(serv_addr);
@@ -62,7 +78,13 @@ void runProxyServer(bool enable_gui) {
             continue;
         }
 
-        handleRequest(client_socket, client_addr, client_addr_length, enable_gui);
+        log("New request received");
+        queue.addRequest(client_socket, client_addr, client_addr_length);
+    }
+
+    // Join threads
+    for (int i = 0; i < N_THREADS; i++) {
+        pthread_join(tid[i], NULL);
     }
 
     close(server_socket);
@@ -85,7 +107,6 @@ int initializeServerSocket(struct sockaddr_in& serv_addr) {
     int sockfd = socket(serv_addr.sin_family, SOCK_STREAM, 0);
     if (sockfd < 0) {
         perror("socket");
-        // TODO: Call logger
         exit(EXIT_FAILURE);
     }
 
@@ -93,14 +114,12 @@ int initializeServerSocket(struct sockaddr_in& serv_addr) {
     int yes = 1;
     if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
         perror("setsockopt");
-        // TODO: Call logger
         exit(EXIT_FAILURE);
     }
 
     // Bind the socket with the port
     if (bind(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == -1) {
         close(sockfd);
-        // TODO: Call logger
         perror("bind");
         exit(EXIT_FAILURE);
     }
@@ -108,7 +127,6 @@ int initializeServerSocket(struct sockaddr_in& serv_addr) {
     // Make the socket avaiable for new connections request
     if (listen(sockfd, LISTEN_BACKLOG_SIZE) == -1) {
         perror("listen");
-        // TODO: Call logger
         exit(EXIT_FAILURE);
     }
 
@@ -189,8 +207,7 @@ void receiveMessage(int socket, HTTPMessage& message, ConnectionStatus& status) 
         if (n_bytes == EAGAIN || n_bytes == EWOULDBLOCK) {
             log("recv timeout.");
             status = INVALID_REQUEST;
-        }
-        else if (n_bytes < 0) {
+        } else if (n_bytes < 0) {
             perror("recv");
             status = INVALID_REQUEST;
         } else if (n_bytes == 0) {
@@ -236,68 +253,53 @@ int send_buffer(int socketfd, const unsigned char* buffer, const uint n_bytes) {
  * \param [in] client_socket Socket to communicate with the client.
  * \param [in] client_addr Informations of the client.
  * \param [in] client_addr_length Size of client_addr.
- * \param [in] enable_gui Indicates if the gui option is active.
  */
-void handleRequest(int client_socket, struct sockaddr_in client_addr, socklen_t client_addr_length, bool enable_gui) {
-    static Filter filter;
-    static Cache cache;
-    // static UI ui;
+void* workingThreadHandleRequest(void*) {
+    while (!SIGINT_received) {
 
-    // Initialize new connection
-    struct timeval tv;
-    tv.tv_sec = 3;
-    tv.tv_usec = 0;
-    setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
-    Connection connection(client_socket, client_addr, client_addr_length);
+        log("Waiting for new request");
+        auto requestInfo = queue.getRequest();
 
-    // Receive the client request
-    connection.receiveRequest();
-    if (connection.status != OK) {
-        connection.sendError();
-        return;
-    }
-    connection.client_request.changeHeader("Connection", "close");
+        // Initialize new connection
+        struct timeval tv;
+        tv.tv_sec = 3;
+        tv.tv_usec = 0;
+        setsockopt(requestInfo.client_socket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
+        Connection connection(requestInfo.client_socket, requestInfo.client_addr, requestInfo.client_addr_length);
 
-    // Open the inspector if it's enabled
-    // if (enable_gui) {
-    //     ui.handleConnection(&connection, REQUEST);
-    //     if (connection.status != OK) {
-    //         connection.sendError();
-    //         return;
-    //     }
-    // }
+        // Receive the client request
+        connection.receiveRequest();
+        if (connection.status != OK) {
+            connection.sendError();
+            continue;
+        }
+        connection.client_request.changeHeader("Connection", "close");
 
-    // Filter the request
-    connection.status = filter.filterRequest(connection.client_request);
-    if (connection.status != OK) {
-        connection.sendError();
-        return;
-    }
+        // Filter the request
+        connection.status = filter.filterRequest(connection.client_request);
+        if (connection.status != OK) {
+            connection.sendError();
+            continue;
+        }
 
-    // Get the response message from the cache or from the external server
-    cache.getResponseMessage(connection);
-    if (connection.status != OK) {
-        connection.sendError();
-        return;
-    }
-    connection.response.changeHeader("Connection", "close");
+        // Get the response message from the cache or from the external server
+        cache.getResponseMessage(connection);
+        if (connection.status != OK) {
+            connection.sendError();
+            continue;
+        }
+        connection.response.changeHeader("Connection", "close");
 
-    // Open the inspector if it's enabled
-    // if (enable_gui) {
-    //     ui.handleConnection(&connection, RESPONSE);
-    //     if (connection.status != OK) {
-    //         connection.sendError();
-    //         return;
-    //     }
-    // }
+        // Filter the response
+        connection.status = filter.filterResponse(connection.response, connection.client_request.getHost());
+        if (connection.status != OK) {
+            connection.sendError();
+            continue;
+        }
 
-    // Filter the response
-    connection.status = filter.filterResponse(connection.response, connection.client_request.getHost());
-    if (connection.status != OK) {
-        connection.sendError();
-        return;
+        // Send the response to the client
+        connection.sendResponse();
     }
 
-    // Send the response to the client
-    connection.sendResponse();
+    return nullptr;
 }

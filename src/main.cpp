@@ -12,7 +12,6 @@
 #include "server.h"
 
 int main(int argc, char **argv) {
-    bool enable_gui;
 
     if (!startLog()) {
         std::cout << "Não foi possivel abrir o arquivo de log" << std::endl;
@@ -22,7 +21,6 @@ int main(int argc, char **argv) {
     // Check the cmd options
     if (argc > 1 && strcmp("-i", argv[1]) == 0) {
         log("Interface para inspecao de cabecalhos HTTP abilitada.");
-        enable_gui = true;
     } else if (argc > 1 && strcmp("-d", argv[1]) == 0) {
         log("Rodando o proxy como daemon.");
 
@@ -32,11 +30,9 @@ int main(int argc, char **argv) {
         // Redirect stdout and stderr to log files
         freopen("stdout_log.txt", "w", stdout);
         freopen("stderr_log.txt", "w", stderr);
-    } else {
-        enable_gui = false;
     }
 
-    runProxyServer(enable_gui);
+    runProxyServer();
 
     closeLog();
 
