@@ -24,7 +24,7 @@
 #include "server.h"
 
 #define BUFFER_SIZE 10000
-#define N_THREADS 200
+#define N_THREADS 110
 
 /*!
  * \brief Server port to receive new connections.

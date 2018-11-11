@@ -9,10 +9,12 @@
 #define BUFFER_SIZE 10000
 
 void Cache::getResponseMessage(Connection &connection) {
+    bool updateCache = false;
+
     pthread_mutex_lock(&mutex);
 
-    CachedPage& cachedPage = pages[connection.client_request.getPath()];
-    
+    CachedPage &cachedPage = pages[connection.client_request.getPath()];
+
     pthread_mutex_lock(&cachedPage.pageReadMutex);
 
     pthread_mutex_unlock(&mutex);
@@ -56,7 +58,7 @@ void Cache::getResponseMessage(Connection &connection) {
                 log("[Cache] Requisição GET CONDITIONAL retornou atualização");
                 connection.response = response;
                 log("[Cache] Salvando resposta do servidor");
-                cachedPage.data = connection.response.getMessage();
+                updateCache = true;
             } else {
                 // TODO: handle when the server doesn't support "If-Modified-Since: ",
                 // for now the cache is considered to be up-to-date in that case
@@ -81,15 +83,16 @@ void Cache::getResponseMessage(Connection &connection) {
 
         log("[Cache] Salvando resposta do servidor");
 
-        cachedPage.data = connection.response.getMessage();
+        updateCache = true;
     }
 
-    // Apply changes to the cache
-    pthread_mutex_lock(&mutex);
-    pthread_mutex_lock(&cachedPage.pageReadMutex);
-    pages[connection.client_request.getPath()] = cachedPage;
-    pthread_mutex_unlock(&cachedPage.pageReadMutex);
-    pthread_mutex_unlock(&mutex);
+    if (updateCache) {
+        pthread_mutex_lock(&mutex);
+        pthread_mutex_lock(&cachedPage.pageReadMutex);
+        cachedPage.data = connection.response.getMessage();
+        pthread_mutex_unlock(&cachedPage.pageReadMutex);
+        pthread_mutex_unlock(&mutex);
+    }
 }
 
 void Cache::saveToCache(CachedPage &cachedPage, std::vector<char> data) {

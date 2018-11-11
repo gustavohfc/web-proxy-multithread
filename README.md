@@ -14,10 +14,6 @@ Para executar o programa em modo padrão, digite:
 
     $ make run
 
-Ou, para executar o programa em modo inspeção, digite:
-
-    $ make run_inspecao
-
 Ou, para executar o programa em modo daemon, onde o programa será executado em background no 
 sistema operacional, digite:
 
