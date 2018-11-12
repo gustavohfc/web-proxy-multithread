@@ -6,18 +6,59 @@
 #include "cache.h"
 #include "server.h"
 
-#define BUFFER_SIZE 10000
+CachedPage &Cache::getLockedCachedPage(std::string path) {
+    log("[Cache] Esperando o lock para leitura do cache");
+
+    pthread_mutex_lock(&pagesMutex);
+    auto &cachedPage = pages[path];
+    pthread_mutex_unlock(&pagesMutex);
+
+    // Thread tentando atualizar o cache tem prioridade
+    pthread_mutex_lock(&cachedPage.mutex);
+    while (cachedPage.tryingToUpdate) {
+        pthread_cond_wait(&cachedPage.updateCompleteCond, &cachedPage.mutex);
+    }
+
+    cachedPage.nReading++;
+
+    pthread_mutex_unlock(&cachedPage.mutex);
+
+    return cachedPage;
+}
+
+void Cache::unlockCachedPage(CachedPage &cachedPage) {
+    log("[Cache] Encerrando a leitura do cache");
+
+    pthread_mutex_lock(&cachedPage.mutex);
+
+    if (--cachedPage.nReading == 0 && cachedPage.tryingToUpdate) {
+        pthread_cond_broadcast(&cachedPage.startUpdateCond);
+    }
+    pthread_mutex_unlock(&cachedPage.mutex);
+}
+
+void Cache::updateCachedPage(CachedPage &cachedPage, std::vector<char> data) {
+    log("[Cache] Atualizando página no cache");
+
+    pthread_mutex_lock(&cachedPage.mutex);
+
+    cachedPage.tryingToUpdate = true;
+
+    while (cachedPage.nReading > 0) {
+        pthread_cond_wait(&cachedPage.startUpdateCond, &cachedPage.mutex);
+    }
+
+    cachedPage.data = data;
+
+    cachedPage.tryingToUpdate = false;
+
+    pthread_cond_broadcast(&cachedPage.updateCompleteCond);
+
+    pthread_mutex_unlock(&cachedPage.mutex);
+}
 
 void Cache::getResponseMessage(Connection &connection) {
-    bool updateCache = false;
-
-    pthread_mutex_lock(&mutex);
-
-    CachedPage &cachedPage = pages[connection.client_request.getPath()];
-
-    pthread_mutex_lock(&cachedPage.pageReadMutex);
-
-    pthread_mutex_unlock(&mutex);
+    auto &cachedPage = getLockedCachedPage(connection.client_request.getPath());
 
     if (!cachedPage.data.empty()) {
         log("[Cache] Pagina encontrada em cache!");
@@ -34,10 +75,9 @@ void Cache::getResponseMessage(Connection &connection) {
         }
 
         // load cache
-        char *buffer = &cachedPage.data[0];
-        connection.response.addMessageData(buffer, cachedPage.data.size());
+        connection.response.addMessageData(&cachedPage.data[0], cachedPage.data.size());
 
-        pthread_mutex_unlock(&cachedPage.pageReadMutex);
+        unlockCachedPage(cachedPage);
 
         cache_request = "GET " + connection.client_request.getPath() + " HTTP/1.1\r\n";
         cache_request += "Host: " + connection.client_request.getHost() + "\r\n";
@@ -58,7 +98,7 @@ void Cache::getResponseMessage(Connection &connection) {
                 log("[Cache] Requisição GET CONDITIONAL retornou atualização");
                 connection.response = response;
                 log("[Cache] Salvando resposta do servidor");
-                updateCache = true;
+                updateCachedPage(cachedPage, connection.response.getMessage());
             } else {
                 // TODO: handle when the server doesn't support "If-Modified-Since: ",
                 // for now the cache is considered to be up-to-date in that case
@@ -71,7 +111,7 @@ void Cache::getResponseMessage(Connection &connection) {
 
         close(verify_socket);
     } else {
-        pthread_mutex_unlock(&cachedPage.pageReadMutex);
+        unlockCachedPage(cachedPage);
 
         // File not in cache, request message from the server
         connection.server_socket = connectToHost(connection.client_request.getHost(), connection.status);
@@ -83,20 +123,6 @@ void Cache::getResponseMessage(Connection &connection) {
 
         log("[Cache] Salvando resposta do servidor");
 
-        updateCache = true;
+        updateCachedPage(cachedPage, connection.response.getMessage());
     }
-
-    if (updateCache) {
-        pthread_mutex_lock(&mutex);
-        pthread_mutex_lock(&cachedPage.pageReadMutex);
-        cachedPage.data = connection.response.getMessage();
-        pthread_mutex_unlock(&cachedPage.pageReadMutex);
-        pthread_mutex_unlock(&mutex);
-    }
-}
-
-void Cache::saveToCache(CachedPage &cachedPage, std::vector<char> data) {
-    log("[Cache] Salvando resposta do servidor");
-
-    cachedPage.data = data;
 }

@@ -14,30 +14,27 @@
 #include "connection.h"
 #include "log.h"
 
-//#define CACHE_SIZE 1000  // in number of CacheType's
-//#define CACHE_PATH "./cache"
-
 class CachedPage {
    public:
     std::vector<char> data;
+    bool tryingToUpdate = false;
+    bool hasMoreRecentVersion = false;
+    int nReading = 0;
 
-    pthread_mutex_t pageReadMutex;
-
-    CachedPage() {
-        pthread_mutex_init(&pageReadMutex, NULL);
-    }
-
-    ~CachedPage() {
-        pthread_mutex_destroy(&pageReadMutex);
-    }
+    pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+    pthread_cond_t startUpdateCond = PTHREAD_COND_INITIALIZER;
+    pthread_cond_t updateCompleteCond = PTHREAD_COND_INITIALIZER;
 };
 
 class Cache {
    private:
     std::map<std::string, CachedPage> pages;
-    pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_t pagesMutex = PTHREAD_MUTEX_INITIALIZER;
 
     void saveToCache(CachedPage& cachedPage, std::vector<char> data);
+    CachedPage& getLockedCachedPage(std::string path);
+    void unlockCachedPage(CachedPage &cachedPage);
+    void updateCachedPage(CachedPage& cachedPage, std::vector<char> data);
 
    public:
     void getResponseMessage(Connection& connection);
