@@ -46,6 +46,13 @@ void Cache::updateCachedPage(CachedPage &cachedPage, std::vector<char> data) {
 
     while (cachedPage.nReading > 0) {
         pthread_cond_wait(&cachedPage.startUpdateCond, &cachedPage.mutex);
+
+        // Confere se outra thread acabou de atualizar o cache, se o cache foi atualizado recentemente
+        // não é necessário atualizar novamente.
+        if (!cachedPage.tryingToUpdate) {
+            pthread_mutex_unlock(&cachedPage.mutex);
+            return;
+        }
     }
 
     cachedPage.data = data;

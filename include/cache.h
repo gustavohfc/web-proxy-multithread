@@ -18,7 +18,6 @@ class CachedPage {
    public:
     std::vector<char> data;
     bool tryingToUpdate = false;
-    bool hasMoreRecentVersion = false;
     int nReading = 0;
 
     pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
